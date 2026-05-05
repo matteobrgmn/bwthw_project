@@ -19,12 +19,12 @@ Use:
 - Calories
 - Steps
 - Exercise session?
-
+- Meals? (manually input calories/macros)
 To do:
-1. Ask periodically height and weight with this calculate the BMI.
+1. Ask periodically height and weight with this calculate the BMI(peso(kg)/altezza^2(m)).
 Create graphs to monitor the weight and BMI over the time.
-2. Find a way to estimate the needed calories and try to verify if we are under or over a threshold
-3. Set up a goal for daily steps, create warning if the steps are too low
+2. Find a way to estimate the needed calories and try to verify if we are under or over a threshold. (Could make addition if the user is in pregnancy, to address the initial open issue?) (BMR (Women)=(10×weight in kg)+(6.25×height in cm)−(5×age in years)−161, or BMR (Men)=(10×weight in kg)+(6.25×height in cm)−(5×age in years)+5, factoring physical activity by using a constant (can use data to estimate physical activity?))
+3. Set up a goal (by the user) for daily steps, create warning if the steps are too low
 4. Create warnings if the exercies or steps are too intense to avoid malnutrional risks
 5. Create a 'Streak' system with a small pet or something similar.. keep doing steps and activity to save the pet
 
