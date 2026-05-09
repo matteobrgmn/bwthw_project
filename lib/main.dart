@@ -31,6 +31,18 @@ class _MainAppState extends State<MainApp> {
               });
             }, child: Text('Test ping')),
             Text('Server $serverStatus'),
+            ElevatedButton(onPressed: () async {
+              await impact.authentication();
+            }, child: Text('Authentication')),
+            ElevatedButton(onPressed: () async {
+              impact.printer();
+            }, child: Text('Printer')),
+            ElevatedButton(onPressed: () async {
+              await impact.getStepsSingleDay('2024-05-04');
+            }, child: Text('Get steps')),
+            ElevatedButton(onPressed: () async {
+              await impact.refresh();
+            }, child: Text('Refresh')),
           ]
         ),
         ),
