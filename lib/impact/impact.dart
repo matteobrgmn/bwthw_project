@@ -11,10 +11,11 @@ class Impact{
   static final _formattedPingUrl = Uri.parse(_baseUrl + _pingUrl);
   static final _formattedTokenUrl = Uri.parse(_baseUrl + _tokenUrl);
   static final _formattedRefreshUrl = Uri.parse(_baseUrl + _refreshUrl);
+  static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
+  static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
   static final _username = 'i1nyvHLHUd';
   static final _password = '12345678!';
   static String patientUsername = 'Jpefaq6m58';
-  static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
   static String _token = 'empty';
   static String _refresh = 'empty';
 
@@ -87,10 +88,10 @@ class Impact{
     },
   );
   if (response.statusCode == 200) {
-    final responseDecoded = jsonDecode(response.body);
-    for (var i=0; i<responseDecoded['data']['data'].length; i++) {
-      if (responseDecoded['data']['data'][i]['value'] != null) {
-        numberOfSteps = numberOfSteps + int.parse(responseDecoded['data']['data'][i]['value']);
+    final responseDecodedBody = jsonDecode(response.body);
+    for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
+      if (responseDecodedBody['data']['data'][i]['value'] != null) {
+        numberOfSteps = numberOfSteps + int.parse(responseDecodedBody['data']['data'][i]['value']);
       }
     }
     // print(numberOfSteps); // Debug
@@ -101,7 +102,38 @@ class Impact{
     // print(response.body);
     return -1;
   }
-}
+  }
+
+  /* Return steps for each day between a start and end date given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 
+   * Notes: 
+   * - Maximum 7 days between startDate and endDate
+   * - Dates can't be equal
+   * - stardDate must be lower than endDate
+   * This exception aren't managed inside the function
+   */
+  Future<Map<String, dynamic>> getStepsBtwTwoDates(String startDate, String endDate) async {
+  if (JwtDecoder.isExpired(_token)){
+    await refresh();
+    // print('expired'); // Debug
+  };
+  
+  final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+  final response = await http.get(
+    urlParsed,
+    headers: {
+      'Authorization': 'Bearer $_token',
+    },
+  );
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+    // print(responseDecodedBody); // Debug
+    // print(numberOfSteps); // Debug
+    } else {
+    // print(-1); // Debug
+    // print(response.statusCode); // Debug
+    // print(response.body); // Debug
+    return {};
+  }}
 
   /* Printer */
    void printer () {

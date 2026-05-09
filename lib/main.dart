@@ -43,6 +43,9 @@ class _MainAppState extends State<MainApp> {
             ElevatedButton(onPressed: () async {
               await impact.refresh();
             }, child: Text('Refresh')),
+            ElevatedButton(onPressed: () async {
+              await impact.getStepsBtwTwoDates('2024-05-04', '2024-05-09');
+            }, child: Text('Get steps between two dates')),
           ]
         ),
         ),
