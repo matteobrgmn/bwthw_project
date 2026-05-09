@@ -3,7 +3,7 @@ import '../impact/impact.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class DebugPage extends StatefulWidget {
-  
+  const DebugPage({super.key});
 
   @override
   State<DebugPage> createState() => _DebugPageState();
@@ -11,15 +11,12 @@ class DebugPage extends StatefulWidget {
 
 class _DebugPageState extends State<DebugPage> {
   
-
-  @override
-  Widget build(BuildContext context) {
-    
-
   final impact = Impact();
   List<FlSpot> spots = [];
   String serverStatus = 'offline';
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
         body: Center (
           child : Column(
@@ -97,7 +94,10 @@ class _DebugPageState extends State<DebugPage> {
                 ]
               )
             )
-          )
+          ),
+          ElevatedButton(onPressed: () async {
+              Navigator.pop(context);
+            }, child: Text('Back to login page')),
         ]
         ),
       ),

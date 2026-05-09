@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'debug_page.dart';
 
 //void main() {
 //  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
@@ -95,6 +96,11 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(onPressed: (){
                 Navigator.of(context).pop();
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
+
+              ElevatedButton(onPressed: () async {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => DebugPage()));
+              }, child: Text("Go to debug page")),
+              
            ],
           ),
         ),
