@@ -125,7 +125,22 @@ class Impact{
     },
   );
   if (response.statusCode == 200) {
-    return jsonDecode(response.body);
+    final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
+    List<dynamic> items = responseDecodedBody['data'];
+    Map<String, int> _stepsPerDay = {};
+    for (var item in items) {
+        String date = item['date'];
+        // print('Data: $date'); // Debug 
+        List<dynamic> measurements = item['data'];
+        var _steps = 0;
+        for (var m in measurements) {
+          var value = int.parse(m['value']);
+          _steps += value;
+        }
+        _stepsPerDay[date] = _steps;
+    }
+    // print(_stepsPerDay); // Debug
+    return _stepsPerDay;
     // print(responseDecodedBody); // Debug
     // print(numberOfSteps); // Debug
     } else {
