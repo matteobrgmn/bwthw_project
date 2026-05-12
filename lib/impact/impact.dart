@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:intl/intl.dart';
 
 /* This class manages the communication with impact database */
 class Impact{
@@ -13,9 +14,9 @@ class Impact{
   static final _formattedRefreshUrl = Uri.parse(_baseUrl + _refreshUrl);
   static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
   static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
-  static final _username = 'i1nyvHLHUd';
+  static final _username = '4JlqNsFrUN';
   static final _password = '12345678!';
-  static String patientUsername = 'Jpefaq6m58';
+  static String patientUsername = '4JlqNsFrUN';
   static String _token = 'empty';
   static String _refresh = 'empty';
 
@@ -109,46 +110,52 @@ class Impact{
    * - Maximum 7 days between startDate and endDate
    * - Dates can't be equal
    * - stardDate must be lower than endDate
-   * This exception aren't managed inside the function
    */
-  Future<Map<String, dynamic>> getStepsBtwTwoDates(String startDate, String endDate) async {
-  if (JwtDecoder.isExpired(_token)){
-    await refresh();
-    // print('expired'); // Debug
-  };
-  
-  final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
-  final response = await http.get(
-    urlParsed,
-    headers: {
-      'Authorization': 'Bearer $_token',
-    },
-  );
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
-    List<dynamic> items = responseDecodedBody['data'];
-    Map<String, int> _stepsPerDay = {};
-    for (var item in items) {
-        String date = item['date'];
-        // print('Data: $date'); // Debug 
-        List<dynamic> measurements = item['data'];
-        var _steps = 0;
-        for (var m in measurements) {
-          var value = int.parse(m['value']);
-          _steps += value;
-        }
-        _stepsPerDay[date] = _steps;
+  Future<Map<String, dynamic>?> getStepsBtwTwoDates(String startDate, String endDate) async {
+    DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss");
+    DateTime startDateParsed = formatter.parse(startDate);
+    DateTime endDateParsed = formatter.parse(endDate);
+    if(endDate.compareTo(startDate) < 1 || endDateParsed.difference(startDateParsed).inDays>7){ 
+      return null; //checks wether or not the startDate is larger than the endDate or the difference is larger than a week, in case it is, return null to be treated as an exception in main page
     }
-    // print(_stepsPerDay); // Debug
-    return _stepsPerDay;
-    // print(responseDecodedBody); // Debug
-    // print(numberOfSteps); // Debug
+    if (JwtDecoder.isExpired(_token)){
+      await refresh();
+      // print('expired'); // Debug
+    };
+    
+    final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+    final response = await http.get(
+      urlParsed,
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
+      List<dynamic> items = responseDecodedBody['data'];
+      Map<String, int> _stepsPerDay = {};
+      for (var item in items) {
+          String date = item['date'];
+          // print('Data: $date'); // Debug 
+          List<dynamic> measurements = item['data'];
+          var _steps = 0;
+          for (var m in measurements) {
+            var value = int.parse(m['value']);
+            _steps += value;
+          }
+          _stepsPerDay[date] = _steps;
+    }
+      // print(_stepsPerDay); // Debug
+      return _stepsPerDay;
+      // print(responseDecodedBody); // Debug
+      // print(numberOfSteps); // Debug
     } else {
-    // print(-1); // Debug
-    // print(response.statusCode); // Debug
-    // print(response.body); // Debug
-    return {};
-  }}
+     // print(-1); // Debug
+     // print(response.statusCode); // Debug
+     // print(response.body); // Debug
+      return {};
+    }
+  }
 
   /* Printer */
    void printer () {

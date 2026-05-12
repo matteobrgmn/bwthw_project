@@ -45,18 +45,25 @@ class _DebugPageState extends State<DebugPage> {
             ElevatedButton(onPressed: () async {
               final mapOfDates = await impact.getStepsBtwTwoDates('2024-05-04', '2024-05-11');
               // print(mapOfDates); // Debug
-              var i = 0;
-              spots = [];
-              mapOfDates.forEach((key, value) {
+              if (mapOfDates == null){
+                ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('The date range is not valid!')),
+                );
+              }
+              else{
+                var i = 0;
+                spots = [];
+                mapOfDates.forEach((key, value) {
                 spots.add(
                     FlSpot(i.toDouble(), value.toDouble()),
                   );
                   i += 1;
+                  setState(() {
+                    
+                });
               });
+              }
               // print(spots); // Debug
-              setState(() {
-                
-              });
             }, child: Text('Get steps between two dates')), 
 
             // Small chart to represent steps data
