@@ -12,7 +12,9 @@ class DebugPage extends StatefulWidget {
 class _DebugPageState extends State<DebugPage> {
   
   final impact = Impact();
-  List<FlSpot> spots = [];
+  List<FlSpot> spotsSteps = [];
+  List<FlSpot> spotsCalories = [];
+
   String serverStatus = 'offline';
 
   @override
@@ -52,9 +54,9 @@ class _DebugPageState extends State<DebugPage> {
               }
               else{
                 var i = 0;
-                spots = [];
+                spotsSteps = [];
                 mapOfDates.forEach((key, value) {
-                spots.add(
+                spotsSteps.add(
                     FlSpot(i.toDouble(), value.toDouble()),
                   );
                   i += 1;
@@ -68,8 +70,8 @@ class _DebugPageState extends State<DebugPage> {
 
             // Small chart to represent steps data
             SizedBox(
-            height: 300,
-            width : 300,
+            height: 200,
+            width : 200,
             child: LineChart(
               LineChartData(
                 minX: 0,
@@ -94,7 +96,7 @@ class _DebugPageState extends State<DebugPage> {
                 ),
                 lineBarsData: [
                   LineChartBarData(
-                    spots : spots,
+                    spots : spotsSteps,
                     isCurved: false,
                     barWidth: 2,
                   )
@@ -105,6 +107,70 @@ class _DebugPageState extends State<DebugPage> {
           ElevatedButton(onPressed: () async {
               Navigator.pop(context);
             }, child: Text('Back to login page')),
+        ElevatedButton(onPressed: () async {
+              print('here');
+              final mapOfDates2 = await impact.getCaloriesBtwTwoDates('2024-05-04', '2024-05-11');
+              // print(mapOfDates); // Debug
+              if (mapOfDates2 == null){
+                ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('The date range is not valid!')),
+                );
+              }
+              else{
+                var i = 0;
+                spotsCalories = [];
+                print(mapOfDates2);
+                mapOfDates2.forEach((key, value) {
+                spotsCalories.add(
+                    FlSpot(i.toDouble(), value.toDouble()),
+                  );
+                  i += 1;
+                  setState(() {
+                    
+                });
+                
+              });
+              }
+              // print(spots); // Debug
+            }, child: Text('Get calories between two dates')), 
+          
+            // Small chart to represent steps data
+            SizedBox(
+            height: 200,
+            width : 200,
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: 7,
+                minY: 0,
+                maxY: 5000,
+                gridData: FlGridData(show:false),
+                // To remove description from right and the top
+                titlesData: FlTitlesData(
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
+                    
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots : spotsCalories,
+                    isCurved: false,
+                    barWidth: 2,
+                  )
+                ]
+              )
+            )
+          ),
         ]
         ),
       ),

@@ -32,15 +32,50 @@ Notes:
 - Create a list with phrases (and icons?) to use for each warnings, so they aren't always the same
 
 
+App structure
 
-Pages:
-- Login
-- Home page (widget, grafici)
-- Inserire i dati (peso, altezza, ecc)
-- Data page -> per visualizzare i dati
-- Pagina per inserire i pasti
-- Pop-up alert (fuori dall'app)
-- Pop-up per chiedere aggiornamento peso
+### 1. Login page
+
+In the login page the user has two choices: login or signup.
+If he select the login, he must insert "username" and "password"
+otherwise he creates a new account with "username" and "password".
+The account datas are stored by the shared preferences.
+
+### 2. Home page
+
+In this page the user can visualize:
+- A graph showing the steps for the last week (7days) with the goal
+ <br> function getStepBtwTwoDays
+- A widget showing the daily calories
+- A widget showing the daily steps (so the user has immediatly the number)
+- A widget showing his weight
+- Navigation bar (equal for all the application):
+    - home on the middle
+    - user personal data page
+    - right?
+
+### 3. User personal datas settings page and visualization
+
+In this page the user can add:
+- weight,
+- height,
+- age, 
+- steps goal.
+
+### 4. Page for entering meals
+
+On this page, the user can add meals:
+- breakfast,
+- lunch,
+- dinner.
+
+The calories are summed to obtain the daily total and compared with the calories burned.
+
+
+
+### Pagina per inserire i pasti
+### Pop-up alert (fuori dall'app)
+### Pop-up per chiedere aggiornamento peso
 
 
 

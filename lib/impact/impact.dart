@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 
 /* This class manages the communication with impact database */
 class Impact{
@@ -17,6 +17,7 @@ class Impact{
   static String patientUsername = 'Jpefaq6m58';
   static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
   static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
+  static final _caloriesBtwTwoDates = "data/v1/calories/patients/$patientUsername/";
   static String _token = 'empty';
   static String _refresh = 'empty';
 
@@ -29,7 +30,7 @@ class Impact{
     } else {
       return 'offline';
     }} catch (e) {
-    print('Network error: $e');
+    // print('Network error: $e'); // Debug
     return 'offline';
   }
   }
@@ -136,8 +137,8 @@ class Impact{
       },
     );
 
-    print(response.statusCode);
-    print(response.body);
+    // print(response.statusCode);
+    // print(response.body);
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
       List<dynamic> items = responseDecodedBody['data'];
@@ -154,9 +155,58 @@ class Impact{
           _stepsPerDay[date] = _steps;
     }
       // print(_stepsPerDay); // Debug  
-      print(responseDecodedBody); // Debug
+      // print(responseDecodedBody); // Debug
       // print(numberOfSteps); // Debug
       return _stepsPerDay;
+      } else {
+     // print(-1); // Debug
+     // print(response.statusCode); // Debug
+     // print(response.body); // Debug
+      return {};
+    }
+  }
+
+  /* Return steps for each day between a start and end date given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 
+   * Notes: 
+   * - Maximum 7 days between startDate and endDate
+   * - Dates can't be equal
+   * - stardDate must be lower than endDate
+   */
+  Future<Map<String, dynamic>?> getCaloriesBtwTwoDates(String startDate, String endDate) async {
+    
+    if (JwtDecoder.isExpired(_token)){
+      await refresh();
+      // print('expired'); // Debug
+    };
+    
+    final urlParsed = Uri.parse("$_baseUrl${_caloriesBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+    final response = await http.get(
+      urlParsed,
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+
+     print(response.statusCode);
+     print(response.body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
+      List<dynamic> items = responseDecodedBody['data'];
+      Map<String, double> _caloriesPerDay = {};
+      for (var item in items) {
+          String date = item['date'];
+          // print('Data: $date'); // Debug 
+          List<dynamic> measurements = item['data'];
+          double _calories = 0;
+          for (var m in measurements) {
+            var value = double.parse(m['value']);
+            _calories += value;
+          }
+          _caloriesPerDay[date] = _calories;
+    }
+      // print(responseDecodedBody); // Debug
+      // print(numberOfSteps); // Debug
+      return _caloriesPerDay;
       } else {
      // print(-1); // Debug
      // print(response.statusCode); // Debug
