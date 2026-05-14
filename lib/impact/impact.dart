@@ -12,11 +12,11 @@ class Impact{
   static final _formattedPingUrl = Uri.parse(_baseUrl + _pingUrl);
   static final _formattedTokenUrl = Uri.parse(_baseUrl + _tokenUrl);
   static final _formattedRefreshUrl = Uri.parse(_baseUrl + _refreshUrl);
-  static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
-  static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
   static final _username = '4JlqNsFrUN';
   static final _password = '12345678!';
-  static String patientUsername = '4JlqNsFrUN';
+  static String patientUsername = 'Jpefaq6m58';
+  static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
+  static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
   static String _token = 'empty';
   static String _refresh = 'empty';
 
@@ -112,12 +112,17 @@ class Impact{
    * - stardDate must be lower than endDate
    */
   Future<Map<String, dynamic>?> getStepsBtwTwoDates(String startDate, String endDate) async {
+    /*
     DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss");
     DateTime startDateParsed = formatter.parse(startDate);
     DateTime endDateParsed = formatter.parse(endDate);
+
+    print(endDateParsed);
+    print(startDateParsed);
     if(endDate.compareTo(startDate) < 1 || endDateParsed.difference(startDateParsed).inDays>7){ 
       return null; //checks wether or not the startDate is larger than the endDate or the difference is larger than a week, in case it is, return null to be treated as an exception in main page
     }
+    */
     if (JwtDecoder.isExpired(_token)){
       await refresh();
       // print('expired'); // Debug
@@ -130,6 +135,9 @@ class Impact{
         'Authorization': 'Bearer $_token',
       },
     );
+
+    print(response.statusCode);
+    print(response.body);
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
       List<dynamic> items = responseDecodedBody['data'];
@@ -145,11 +153,11 @@ class Impact{
           }
           _stepsPerDay[date] = _steps;
     }
-      // print(_stepsPerDay); // Debug
-      return _stepsPerDay;
-      // print(responseDecodedBody); // Debug
+      // print(_stepsPerDay); // Debug  
+      print(responseDecodedBody); // Debug
       // print(numberOfSteps); // Debug
-    } else {
+      return _stepsPerDay;
+      } else {
      // print(-1); // Debug
      // print(response.statusCode); // Debug
      // print(response.body); // Debug
