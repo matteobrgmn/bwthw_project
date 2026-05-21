@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'debug_page.dart';
 import 'home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //void main() {
 //  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
@@ -98,18 +99,41 @@ class _LoginPageState extends State<LoginPage> {
                ),
               ),
               SizedBox(height: 10,),
-              ElevatedButton(onPressed: (){
+              ElevatedButton(onPressed: () async {
                 String username = userController.text;
                 String password = passController.text;
                 // print(username); Debug
                 // print(password); // Debug
-                if ((username == 'admin') && (password == 'admin123456')) { // Debug password
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
-                } else if (username == 'xx') {
-                  // Manage real username and password through sharepreferences
+                if (_selectedOption[0]) {
+                  // Login
+                  LoginResult loginResult = await verifyLoginData(username, password);
+
+                  if (((username == 'admin') && (password == 'admin123'))) {
+                    // Login with superuser
+                    print('Login with superuser credentials!'); // Debug
+                    // Maybe go to the debug page before
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                  } else if (loginResult.success) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                    print(loginResult.message); // Debug
+                  } else {
+                    // Login failed case
+                    print(loginResult.message); // Debug
+                  }
+                  // Clear password if it's wrong
+                  passController.clear();
+                } else {
+                  // Sign up
+                  SignupResult signupResult = await enterSignupData(username, password);
+                  print(signupResult.message); // Debug
+
+                  if (signupResult.success) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                  }
+                  // Clear password if it's duplicated
+                  passController.clear();
                 }
-                // Clear password if it's wrong
-                passController.clear();
+
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
 
               ElevatedButton(onPressed: () async {
@@ -122,3 +146,49 @@ class _LoginPageState extends State<LoginPage> {
       );
   }
 }
+
+// Create a new file for this
+class LoginResult {
+  final bool success;
+  final String message;
+
+  LoginResult(this.success, this.message);
+}
+
+Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async {
+  final sp = await SharedPreferences.getInstance();
+  final password = sp.getString(inUsername);
+
+  if (password == null) {
+    return LoginResult(false, "User not found!");
+  }
+
+  if (password == inPassword) {
+    return LoginResult(true, "Login ok!");
+  }
+
+  return LoginResult(false, "Wrong password!");
+}
+
+class SignupResult {
+  final bool success;
+  final String message;
+
+  SignupResult(this.success, this.message);
+}
+
+Future<SignupResult> enterSignupData(String inUsername, String inPassword) async {
+  final sp = await SharedPreferences.getInstance();
+  final verifyUserAlreadyExist = sp.getString(inUsername);
+
+  if (verifyUserAlreadyExist == null) {
+    // New user
+    await sp.setString(inUsername, inPassword); // Create new username
+    return SignupResult(true, 'New account created');
+  }
+  
+  // Duplicated
+  return SignupResult(false, 'User already used!');
+
+}
+
