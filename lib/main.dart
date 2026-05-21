@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'screens/login.dart';
+
 void main() {
   runApp(MainApp());
 }
+
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
 

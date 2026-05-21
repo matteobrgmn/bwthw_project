@@ -78,5 +78,8 @@ The calories are summed to obtain the daily total and compared with the calories
 ### Pop-up per chiedere aggiornamento peso
 
 
+Note: 
+- Nell'home page togliere il pop altrimenti torna alla login page
+
 
 

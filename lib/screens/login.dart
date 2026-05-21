@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'debug_page.dart';
+import 'home_page.dart';
 
 //void main() {
 //  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
@@ -31,6 +32,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final TextEditingController userController = TextEditingController();
+  final TextEditingController passController = TextEditingController();
   @override
   Widget build(BuildContext context) {
       return Scaffold(
@@ -71,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20,0,20,0),
                 child: TextField(
+                  controller : userController,
                   decoration: InputDecoration(
                   labelText: 'Username',
                   hintText: 'Enter your username',
@@ -84,6 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                 padding: const EdgeInsets.fromLTRB(20,0,20,0),
                 child: TextField(
                   obscureText: true,
+                  controller : passController,
                   decoration: InputDecoration(
                   labelText: 'Password',
                   hintText: 'Enter your password',
@@ -94,7 +99,17 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 10,),
               ElevatedButton(onPressed: (){
-                Navigator.of(context).pop();
+                String username = userController.text;
+                String password = passController.text;
+                // print(username); Debug
+                // print(password); // Debug
+                if ((username == 'admin') && (password == 'admin123456')) { // Debug password
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                } else if (username == 'xx') {
+                  // Manage real username and password through sharepreferences
+                }
+                // Clear password if it's wrong
+                passController.clear();
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
 
               ElevatedButton(onPressed: () async {
