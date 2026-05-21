@@ -133,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                   // Clear password if it's duplicated
                   passController.clear();
                 }
-
+              
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
 
               ElevatedButton(onPressed: () async {
@@ -156,6 +156,11 @@ class LoginResult {
 }
 
 Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async {
+  
+  if (inUsername.isEmpty || inPassword.isEmpty) {
+    return LoginResult(false, "Empty fields!");
+  }
+  
   final sp = await SharedPreferences.getInstance();
   final password = sp.getString(inUsername);
 
@@ -178,6 +183,10 @@ class SignupResult {
 }
 
 Future<SignupResult> enterSignupData(String inUsername, String inPassword) async {
+  if (inUsername.isEmpty || inPassword.isEmpty) {
+    return SignupResult(false, "Empty fields!");
+  }
+  
   final sp = await SharedPreferences.getInstance();
   final verifyUserAlreadyExist = sp.getString(inUsername);
 
