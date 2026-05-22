@@ -1,5 +1,7 @@
+import 'package:bwthw_project/screens/login_page.dart';
 import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   // DEBUGGING SEGMENT
@@ -40,7 +42,15 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: .start,
           children: [
             SizedBox(height: 50),
-
+            ElevatedButton(onPressed: () {
+              logout();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(title: ''),
+                ),
+              );
+            }, child: Text('Logout')),
             Spacer(),
           ],
         ),
@@ -116,4 +126,9 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
+
+void logout() async {
+  final sp = await SharedPreferences.getInstance();
+  await sp.setBool('rememberLogin', false);
 }

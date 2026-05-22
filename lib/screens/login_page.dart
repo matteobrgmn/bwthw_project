@@ -33,8 +33,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController userController = TextEditingController();
-  final TextEditingController passController = TextEditingController();
+  TextEditingController userController = TextEditingController();
+  TextEditingController passController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  bool rememberUserData = false;
   @override
   Widget build(BuildContext context) {
       return Scaffold(
@@ -71,6 +73,22 @@ class _LoginPageState extends State<LoginPage> {
                 isSelected: _selectedOption,
                 children: options,
               ),
+              SizedBox(height: 10,),
+              if (_selectedOption[1]) ... [
+                SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  child: TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
               SizedBox(height: 10,),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20,0,20,0),
@@ -123,11 +141,13 @@ class _LoginPageState extends State<LoginPage> {
                   // Clear password if it's wrong
                   passController.clear();
                 } else {
+                  String email = emailController.text;
                   // Sign up
-                  SignupResult signupResult = await enterSignupData(username, password);
+                  SignupResult signupResult = await enterSignupData(email, username, password);
                   print(signupResult.message); // Debug
 
                   if (signupResult.success) {
+                    rememberData(rememberUserData);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
                   }
                   // Clear password if it's duplicated
@@ -135,11 +155,18 @@ class _LoginPageState extends State<LoginPage> {
                 }
               
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
-
+              CheckboxListTile(
+                title: const Text("Remember me"),
+                value: rememberUserData,
+                onChanged: (value) {
+                  setState(() {
+                    rememberUserData = value ?? false;
+                  });
+                },
+              ),
               ElevatedButton(onPressed: () async {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => DebugPage()));
               }, child: Text("Go to debug page")),
-              
            ],
           ),
         ),
@@ -162,13 +189,13 @@ Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async 
   }
   
   final sp = await SharedPreferences.getInstance();
-  final password = sp.getString(inUsername);
+  final userList = sp.getStringList(inUsername);
 
-  if (password == null) {
+  if (userList == null) {
     return LoginResult(false, "User not found!");
   }
 
-  if (password == inPassword) {
+  if (userList[2] == inPassword) {
     return LoginResult(true, "Login ok!");
   }
 
@@ -182,17 +209,23 @@ class SignupResult {
   SignupResult(this.success, this.message);
 }
 
-Future<SignupResult> enterSignupData(String inUsername, String inPassword) async {
-  if (inUsername.isEmpty || inPassword.isEmpty) {
+Future<SignupResult> enterSignupData(String inEmail, String inUsername, String inPassword) async {
+  if (inEmail.isEmpty || inUsername.isEmpty || inPassword.isEmpty) {
     return SignupResult(false, "Empty fields!");
   }
   
   final sp = await SharedPreferences.getInstance();
-  final verifyUserAlreadyExist = sp.getString(inUsername);
+  final verifyUserAlreadyExist = sp.getStringList(inUsername);
 
   if (verifyUserAlreadyExist == null) {
-    // New user
-    await sp.setString(inUsername, inPassword); // Create new username
+    // Create new user
+    List<String> userList = [
+      inEmail,
+      inUsername,
+      inPassword,
+    ];
+
+    await sp.setStringList(inUsername, userList); // Create new username
     return SignupResult(true, 'New account created');
   }
   
@@ -201,3 +234,42 @@ Future<SignupResult> enterSignupData(String inUsername, String inPassword) async
 
 }
 
+void rememberData (bool remember) async {
+  final sp = await SharedPreferences.getInstance();
+  if (remember) {
+    await sp.setBool('rememberLogin', true);
+  }
+}
+
+
+/*
+// Class to contain user data
+class UserData {
+  // This part of code is used to create a singoleton of the active user
+  /*
+  static final UserData _instance = UserData._internal();
+
+  factory UserData() {
+    return _instance;
+  }
+
+  UserData._internal();
+  */
+
+  String? username;
+  String? password;
+  int? age;
+  String? weight;
+  String? height;
+  String? email;
+
+  UserData({required this.username, required this.password});
+  // Set user age
+ 
+
+  // Return user age
+  int? getAge() {
+    return this.age;
+  }
+}
+*/

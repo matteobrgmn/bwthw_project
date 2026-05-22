@@ -1,5 +1,8 @@
+import 'package:bwthw_project/screens/debug_page.dart';
+import 'package:bwthw_project/screens/home_page.dart';
 import 'package:flutter/material.dart';
-import 'screens/login.dart';
+import 'screens/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MainApp());
@@ -13,11 +16,45 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
+  Widget? startPage;
+
+  @override
+  void initState() {
+    super.initState();
+    loadStartPage();
+  }
+
+  void loadStartPage() async {
+    final sp = await SharedPreferences.getInstance();
+
+    bool remember = false;
+    bool? storedValue = sp.getBool('rememberLogin');
+    if (storedValue != null) {
+      remember = storedValue;
+    } else {
+      remember = false;
+    }
+
+    if (remember == true) {
+      startPage = HomePage(title: 'Title');
+    } else {
+      startPage = LoginPage(title: 'Title');
+    }
+
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (startPage == null) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
     return MaterialApp(
-      home : LoginPage(title: 'Welcome to NutriTrack :)'),
+      home: startPage!,
     );
   }
 }
