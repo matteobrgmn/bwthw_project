@@ -80,7 +80,7 @@ The calories are summed to obtain the daily total and compared with the calories
 
 Note: 
 - Nell'home page togliere il pop altrimenti torna alla login page
-- Nella debug page mettere il reset della shared preferences
+- Nella debug page mettere il reset della shared preferences (fatto)
 - Inserire una verifica sul numero minimo di caratteri della password mettendo istruzioni
 
 

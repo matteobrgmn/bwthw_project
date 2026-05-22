@@ -16,18 +16,18 @@ class LoginResult {
 Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async {
   // Verify empty field
   if (inUsername.isEmpty || inPassword.isEmpty) {
-    return LoginResult(false, "Empty fields!");
+    return LoginResult(false, "Complete all the field please!");
   }
   
   final sp = await SharedPreferences.getInstance();
   final userList = sp.getStringList(inUsername);
 
   if (userList == null) {
-    return LoginResult(false, "User not found!");
+    return LoginResult(false, "Username not found!");
   }
 
   if (userList[2] == inPassword) {
-    return LoginResult(true, "Login ok!");
+    return LoginResult(true, "Welcome back!");
   }
 
   return LoginResult(false, "Wrong password!");
@@ -48,7 +48,7 @@ class SignupResult {
  */
 Future<SignupResult> enterSignupData(String inEmail, String inUsername, String inPassword) async {
   if (inEmail.isEmpty || inUsername.isEmpty || inPassword.isEmpty) {
-    return SignupResult(false, "Empty fields!");
+    return SignupResult(false, "Complete all the field please!");
   }
   
   final sp = await SharedPreferences.getInstance();
@@ -63,11 +63,11 @@ Future<SignupResult> enterSignupData(String inEmail, String inUsername, String i
     ];
 
     await sp.setStringList(inUsername, userList); // Create new username
-    return SignupResult(true, 'New account created');
+    return SignupResult(true, 'Registration completed. Welcome to NutriTrack!');
   }
   
   // Duplicated
-  return SignupResult(false, 'User already used!');
+  return SignupResult(false, 'Username already used!');
 
 }
 

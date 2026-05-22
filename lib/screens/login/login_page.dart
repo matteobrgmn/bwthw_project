@@ -37,6 +37,26 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   bool rememberUserData = false;
+
+  void _showAlertDialog(String message) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(message),
+          actions: <Widget>[
+            ElevatedButton(
+              child: Text('Ok'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
       return Scaffold(
@@ -140,6 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Login failed case
                     print(loginResult.message); // Debug
                   }
+                  _showAlertDialog(loginResult.message);
                   // Clear password if it's wrong
                   passController.clear();
                 } else {
@@ -149,9 +170,12 @@ class _LoginPageState extends State<LoginPage> {
                   print(signupResult.message); // Debug
 
                   if (signupResult.success) {
+                    // Signup success
                     rememberData(rememberUserData);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
                   }
+                  // Signup failed
+                  _showAlertDialog(signupResult.message);
                   // Clear password if it's duplicated
                   passController.clear();
                 }
