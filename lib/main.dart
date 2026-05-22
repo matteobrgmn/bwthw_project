@@ -1,7 +1,6 @@
-import 'package:bwthw_project/screens/debug_page.dart';
 import 'package:bwthw_project/screens/home_page.dart';
 import 'package:flutter/material.dart';
-import 'screens/login_page.dart';
+import 'screens/login/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

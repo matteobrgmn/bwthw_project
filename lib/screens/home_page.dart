@@ -1,7 +1,8 @@
-import 'package:bwthw_project/screens/login_page.dart';
+import 'package:bwthw_project/screens/login/login_page.dart';
 import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login/login_utils.dart';
 
 void main() {
   // DEBUGGING SEGMENT
@@ -43,7 +44,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             SizedBox(height: 50),
             ElevatedButton(onPressed: () {
+              getRememberData(); // Debug
+              print('Logout'); // Debug
               logout();
+              getRememberData(); // Debug
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -128,6 +132,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+/* Function for logout */
 void logout() async {
   final sp = await SharedPreferences.getInstance();
   await sp.setBool('rememberLogin', false);

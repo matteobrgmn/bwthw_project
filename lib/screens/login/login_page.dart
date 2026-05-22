@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'debug_page.dart';
-import 'home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../debug_page.dart';
+import '../home_page.dart';
+import 'login_utils.dart';
 
 //void main() {
 //  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
@@ -132,8 +132,10 @@ class _LoginPageState extends State<LoginPage> {
                     // Maybe go to the debug page before
                     Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
                   } else if (loginResult.success) {
+                    rememberData(rememberUserData);
                     Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
                     print(loginResult.message); // Debug
+                    getRememberData();
                   } else {
                     // Login failed case
                     print(loginResult.message); // Debug
@@ -173,103 +175,3 @@ class _LoginPageState extends State<LoginPage> {
       );
   }
 }
-
-// Create a new file for this
-class LoginResult {
-  final bool success;
-  final String message;
-
-  LoginResult(this.success, this.message);
-}
-
-Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async {
-  
-  if (inUsername.isEmpty || inPassword.isEmpty) {
-    return LoginResult(false, "Empty fields!");
-  }
-  
-  final sp = await SharedPreferences.getInstance();
-  final userList = sp.getStringList(inUsername);
-
-  if (userList == null) {
-    return LoginResult(false, "User not found!");
-  }
-
-  if (userList[2] == inPassword) {
-    return LoginResult(true, "Login ok!");
-  }
-
-  return LoginResult(false, "Wrong password!");
-}
-
-class SignupResult {
-  final bool success;
-  final String message;
-
-  SignupResult(this.success, this.message);
-}
-
-Future<SignupResult> enterSignupData(String inEmail, String inUsername, String inPassword) async {
-  if (inEmail.isEmpty || inUsername.isEmpty || inPassword.isEmpty) {
-    return SignupResult(false, "Empty fields!");
-  }
-  
-  final sp = await SharedPreferences.getInstance();
-  final verifyUserAlreadyExist = sp.getStringList(inUsername);
-
-  if (verifyUserAlreadyExist == null) {
-    // Create new user
-    List<String> userList = [
-      inEmail,
-      inUsername,
-      inPassword,
-    ];
-
-    await sp.setStringList(inUsername, userList); // Create new username
-    return SignupResult(true, 'New account created');
-  }
-  
-  // Duplicated
-  return SignupResult(false, 'User already used!');
-
-}
-
-void rememberData (bool remember) async {
-  final sp = await SharedPreferences.getInstance();
-  if (remember) {
-    await sp.setBool('rememberLogin', true);
-  }
-}
-
-
-/*
-// Class to contain user data
-class UserData {
-  // This part of code is used to create a singoleton of the active user
-  /*
-  static final UserData _instance = UserData._internal();
-
-  factory UserData() {
-    return _instance;
-  }
-
-  UserData._internal();
-  */
-
-  String? username;
-  String? password;
-  int? age;
-  String? weight;
-  String? height;
-  String? email;
-
-  UserData({required this.username, required this.password});
-  // Set user age
- 
-
-  // Return user age
-  int? getAge() {
-    return this.age;
-  }
-}
-*/
