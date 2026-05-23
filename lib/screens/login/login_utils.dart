@@ -1,4 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 /* Class with the login procedure result and message */
 class LoginResult {
@@ -60,6 +62,7 @@ Future<SignupResult> enterSignupData(String inEmail, String inUsername, String i
       inEmail,
       inUsername,
       inPassword,
+      "true"
     ];
 
     await sp.setStringList(inUsername, userList); // Create new username
@@ -72,16 +75,27 @@ Future<SignupResult> enterSignupData(String inEmail, String inUsername, String i
 }
 
 /* Function to remember login data */
-void rememberData (bool remember) async {
+void rememberData (bool remember, String username) async {
   final sp = await SharedPreferences.getInstance();
-  if (remember) {
-    await sp.setBool('rememberLogin', true);
-  }
+    await sp.setBool('rememberLogin', remember);
+    await sp.setString("username", remember?username:"");
 }
 
-/* Function to get remember login data (for debug) */
+/* Function to get remember login data (for debug) 
 void getRememberData () async {
   final sp = await SharedPreferences.getInstance();
   bool? rememberValue = sp.getBool('rememberLogin');
-  print('Remember value is $rememberValue'); // Debug
+  //print('Remember value is $rememberValue'); // Debug
+}*/
+
+Future<bool> verifyUserBiometricsSaved(String inUser) async{
+  final sp = await SharedPreferences.getInstance();
+  final user = sp.getStringList(inUser);
+  return (user![3] == "false");
+}
+
+String hashPassword(String password) {
+  final bytes = utf8.encode(password);
+  final digest = sha256.convert(bytes);
+  return digest.toString(); 
 }

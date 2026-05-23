@@ -1,7 +1,9 @@
 import 'package:bwthw_project/screens/home_page.dart';
+import 'package:bwthw_project/screens/login/login_utils.dart';
 import 'package:flutter/material.dart';
 import 'screens/login/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/sign_in_page.dart';
 
 void main() {
   runApp(MainApp());
@@ -28,6 +30,7 @@ class _MainAppState extends State<MainApp> {
 
     bool remember = false;
     bool? storedValue = sp.getBool('rememberLogin');
+    
     if (storedValue != null) {
       remember = storedValue;
     } else {
@@ -35,11 +38,18 @@ class _MainAppState extends State<MainApp> {
     }
 
     if (remember == true) {
-      startPage = HomePage(title: 'Title');
+      String username = sp.getString("username")!;
+      bool userBiom = await verifyUserBiometricsSaved(username);
+      if(userBiom)
+      {
+        startPage = HomePage(title: 'Title', username: username);
+      }
+      else{
+        startPage = SignInPage(title: 'Title', username: username);
+      }
     } else {
       startPage = LoginPage(title: 'Title');
     }
-
     setState(() {});
   }
 

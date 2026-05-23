@@ -1,7 +1,9 @@
+import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import '../debug_page.dart';
 import '../home_page.dart';
 import 'login_utils.dart';
+
 
 //void main() {
 //  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
@@ -37,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   bool rememberUserData = false;
+  bool signUp = false;
 
   void _showAlertDialog(String message) async {
     showDialog(
@@ -80,6 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                       _selectedOption[i] = i == index;
                     }
                   });
+                  signUp = _selectedOption[1];
                 },
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
                 selectedBorderColor: Colors.deepPurpleAccent[700],
@@ -139,27 +143,29 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 10,),
               ElevatedButton(onPressed: () async {
                 String username = userController.text;
-                String password = passController.text;
+                String password = hashPassword(passController.text);
                 // print(username); Debug
                 // print(password); // Debug
                 if (_selectedOption[0]) {
                   // Login
+                  
                   LoginResult loginResult = await verifyLoginData(username, password);
 
-                  if (((username == 'admin') && (password == 'admin123'))) {
+                  if (((username == 'admin') && (password == hashPassword('admin123')))) {
                     // Login with superuser
-                    print('Login with superuser credentials!'); // Debug
+                    //print('Login with superuser credentials!'); // Debug
                     // Maybe go to the debug page before
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(title: '',username: username ,)));
                   } else if (loginResult.success) {
-                    rememberData(rememberUserData);
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
-                    print(loginResult.message); // Debug
-                    getRememberData();
-                  } else {
+                    rememberData(rememberUserData, username);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(title: '', username: username,)));
+                    //print(loginResult.message); // Debug
+                    //getRememberData();
+                  } 
+                  //else {
                     // Login failed case
-                    print(loginResult.message); // Debug
-                  }
+                    // print(loginResult.message); // Debug
+                  //}
                   _showAlertDialog(loginResult.message);
                   // Clear password if it's wrong
                   passController.clear();
@@ -167,20 +173,20 @@ class _LoginPageState extends State<LoginPage> {
                   String email = emailController.text;
                   // Sign up
                   SignupResult signupResult = await enterSignupData(email, username, password);
-                  print(signupResult.message); // Debug
+                  //print(signupResult.message); // Debug
 
                   if (signupResult.success) {
                     // Signup success
-                    rememberData(rememberUserData);
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(title: '',)));
+                    rememberData(rememberUserData, username);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage(title: '',username: username,)));
                   }
                   // Signup failed
                   _showAlertDialog(signupResult.message);
                   // Clear password if it's duplicated
                   passController.clear();
                 }
-              
-              }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),
+
+              }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),    
               CheckboxListTile(
                 title: const Text("Remember me"),
                 value: rememberUserData,
