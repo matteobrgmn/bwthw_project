@@ -1,197 +1,376 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  // DEBUGGING SEGMENT
-  runApp(MyApp());
+import 'package:bwthw_project/nutrition/models/food_search_hit.dart';
+import 'package:bwthw_project/nutrition/models/meal_entry.dart';
+import 'package:bwthw_project/nutrition/nutrition_exceptions.dart';
+import 'package:bwthw_project/nutrition/nutrition_service.dart';
+import 'package:bwthw_project/state/meal_store.dart';
+import 'package:bwthw_project/widgets/food_typeahead_field.dart';
+import 'package:bwthw_project/widgets/macros_chips.dart';
+import 'package:bwthw_project/widgets/totals_card.dart';
+
+extension _StringExt on String {
+  String capitalize() =>  isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Meal Page',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const MealPage(title: 'Meal register'),
-    );
-  }
-}
 
 class MealPage extends StatefulWidget {
-  const MealPage({super.key, required this.title});
-  final String title;
+  const MealPage({super.key, required this.username});
+
+  final String username;
+
   @override
   State<MealPage> createState() => _MealPageState();
 }
 
 class _MealPageState extends State<MealPage> {
-  final List<TextEditingController> _controllers = [];
-  int numMeal = 1;
+  late MealStore _store;
+  late NutritionService _service;
+  bool _initialized = false;
+  String? _initError;
+
+  final Map<String, TextEditingController> _qtyControllers = {}; //handling of quantity inputs
 
   @override
-  void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
+  void initState()  {
+    super.initState();
+    _init();
+  }
+
+  //initialize with sharedpreferences data and create meal handling objects
+  Future<void> _init() async {
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      _store = MealStore(prefs: prefs, username: widget.username);
+      _service = NutritionService();
+      await _store.load();
+      if(mounted) setState(() => _initialized = true);
     }
-    super.dispose();
+    catch(e){
+       if(mounted) setState(() => _initError = e.toString());
+    }
+
+      setState(() => _initialized = true);
   }
 
   @override
+  void dispose() {
+    for (final c in _qtyControllers.values) {
+      c.dispose();
+    }
+    if (_initialized) _service.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onHitSelected(String entryId, FoodSearchHit hit) async {
+    _store.updateEntry(entryId, (e) {
+      e.foodName = hit.description;
+      e.fdcId = hit.fdcId;
+    });
+    try {
+      final detail = await _service.detail(hit.fdcId);
+      _store.updateEntry(entryId, (e) => e.applyDetail(detail));
+    } on NutritionAuthException catch (e) {
+      _showSnackBar(e.message);
+    } on NutritionRateLimitException catch (e) {
+      _showSnackBar(e.message);
+    } on NutritionTransportException catch (e) {
+      _showSnackBar('Network error: ${e.cause}');
+    } on NutritionSchemaException catch (e) {
+      debugPrint('NutritionSchemaException: ${e.errors}');
+      _showSnackBar('Could not read nutrition data for this food. Try a different name.');
+    }
+  }
+
+  Future<void> _save() async {
+    await _store.save();
+    if (mounted) _showSnackBar('Saved!');
+  }
+
+  //handles user communication
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  //initialize page
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: .start,
-          children: [
-            SizedBox(height: 50),
-            // TODO: implementare menu modulare di aggiunta pasti
-            // TO assess: LLM-powered??
-            Title(color: Colors.black, child: Text("Meal update")),
-
-            //makes a list of all the entries of the menu
-            Padding(
-              padding: EdgeInsets.all(30),
-              child: Expanded(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: _controllers.asMap().entries.map((e) {
-                    return Row(
-                      key: ValueKey(e.key),
-                      mainAxisAlignment: .center,
-                      children: [
-                        Text("Menu entry #${e.key + 1}"),
-                        SizedBox(width: 5,),
-                        Expanded(
-                          child: TextField(
-                            controller: e.value,
-                            decoration: InputDecoration(
-                              hintText: 'Enter the ingredient',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
+    final appBar = AppBar(
+      title: const Text('Meal Register'),
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+    );
+    
+    //if there's an error in initiation, then retry initiation
+    if (_initError != null) {
+      return Scaffold(
+        appBar: appBar,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48),
+              const SizedBox(height: 8),
+              const Text('Could not load meal data.'),
+              TextButton(
+                onPressed: () => setState(() {
+                  _initError = null;
+                  _initialized = false;
+                  _init();
+                }),
+                child: const Text('Retry'),
               ),
-            ),
-            
-            Spacer(),
-            Row(
-              mainAxisAlignment: .center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _controllers.add(TextEditingController());
-                      numMeal++;
-                    });
-                  },
+            ],
+          ),
+        ),
+      );
+    }
 
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(20),
-                    backgroundColor: const Color.fromARGB(255, 171, 97, 184),
-                  ),
-                  child: Icon(
-                    Icons.add,
-                    color: Colors.deepPurpleAccent[400],
-                    size: 30,
-                  ),
-                ),
+    //if it's not initialized, wait for it to be
+    if (!_initialized) {
+      return Scaffold(
+        appBar: appBar,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-                //generazione condizionata di un elevatedButton che rimuove gli elementi dei pasti se esiste almeno un alimento nel menu
-                numMeal > 1
-                    ? ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _controllers.last.dispose();
-                            _controllers.removeLast();
-                            numMeal--;
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(20),
-                          backgroundColor: const Color.fromARGB(255, 169, 100, 181),
-                        ),
-                        child: Icon(
-                          Icons.remove_circle,
-                          color: Colors.deepPurpleAccent[400],
-                          size: 30,
-                        ),
-                      )
-                    : SizedBox(height: 0),
-              ],
-            ),
-            SizedBox(height: 30,),
-          ],
+    //injecting state through the root of the page's tree
+    return ChangeNotifierProvider.value(
+      value: _store,
+      child: Scaffold(
+        appBar: appBar,
+        body: _buildBody(),
+        bottomNavigationBar: BottomAppBar(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.home),
+                onPressed: () => Navigator.pop(context),
+              ),
+              IconButton(
+                icon: const Icon(Icons.bar_chart),
+                onPressed: () => Navigator.pop(context),
+              ),
+              ElevatedButton(
+                onPressed: _save,
+                child: const Text('Save'),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
 
-      //navigation bar used in each of the pages. each page will return to the homepage in order 
-      //to maintain a tidy navigation stack
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: .spaceEvenly,
-          children: [
-            IconButton(onPressed: (){
-              Navigator.pop(context);
-            }, icon: Icon(Icons.home)),
-
-            IconButton(onPressed: () {
-
-
-              // INSERIRE IL DATO PER IDENTIFICARE LA PAGINA DEI DATI UNA VOLTA CHE SARÀ CREATA
-            
-
-              Navigator.pop(context, );
-            }, icon: Icon(Icons.bar_chart)),
-
-          //Alerts the user that the page will be reset, then, if the user agrees, it navigates to reset the page
-           IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      alignment: Alignment.center, 
-                      title: const Text("Refresh page", style: TextStyle(fontSize: 26)),
-                      content: const Text("Do you wish to refresh the page and remove all instances set so far?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context); 
-                          }, 
-                          child: const Text("No"),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            setState(() {
-                              var _iter = _controllers.length;
-                              for(var i =0; i<_iter;i++){
-                                _controllers.last.dispose();
-                                _controllers.removeLast();
-                                numMeal--;
-                              }
-                            });
-                          }, 
-                          child: const Text("Yes"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }, 
-              icon: const Icon(Icons.menu_book),
+  //function to rebuild the function's body, returning a consumer for state updatability
+  Widget _buildBody() {
+    return Consumer<MealStore>(
+      builder: (context, store, _) {
+        final currentIds = store.entries.map((e) => e.id).toSet();
+        _qtyControllers.keys
+            .where((id) => !currentIds.contains(id))
+            .toList()
+            .forEach((id) {
+          _qtyControllers[id]!.dispose();
+          _qtyControllers.remove(id);
+        });
+        for (final entry in store.entries) {
+          _qtyControllers.putIfAbsent(
+            entry.id,
+            () => TextEditingController(
+              text: entry.quantity == 0.0 ? '' : entry.quantity.toString(),
             ),
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              _SlotDropdown(store: store),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: store.entries.length,
+                itemBuilder: (context, index) {
+                  final entry = store.entries[index];
+                  return _MealEntryRow(
+                    entry: entry,
+                    index: index,
+                    store: store,
+                    service: _service,
+                    qtyController: _qtyControllers[entry.id]!,
+                    onHitSelected: _onHitSelected,
+                    onError: _showSnackBar,
+                  );
+                },
+              ),
+              TotalsCard(store: store),
+              _AddRowButton(store: store),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+
+class _SlotDropdown extends StatelessWidget {
+  const _SlotDropdown({required this.store});
+
+  final MealStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Center(
+        child: DropdownButton<MealSlot>(
+          value: store.currentSlot,
+          items: MealSlot.values
+              .map(
+                (slot) => DropdownMenuItem(
+                  value: slot,
+                  child: Text(slot.name.capitalize()),
+                ),
+              )
+              .toList(),
+          onChanged: (slot) {
+            if (slot != null) store.selectSlot(slot);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+//handles addition of foods
+class _AddRowButton extends StatelessWidget {
+  const _AddRowButton({required this.store});
+
+  final MealStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ElevatedButton.icon(
+        onPressed: store.addRow,
+        icon: const Icon(Icons.add),
+        label: const Text('Add food'),
+      ),
+    );
+  }
+}
+
+//handles and shows single food row
+class _MealEntryRow extends StatelessWidget {
+  const _MealEntryRow({
+    required this.entry,
+    required this.index,
+    required this.store,
+    required this.service,
+    required this.qtyController,
+    required this.onHitSelected,
+    required this.onError,
+  });
+
+  final MealEntry entry;
+  final int index;
+  final MealStore store;
+  final NutritionService service;
+  final TextEditingController qtyController;
+  final Future<void> Function(String entryId, FoodSearchHit hit) onHitSelected;
+  final void Function(String msg) onError;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                Text(
+                  'Entry #${index + 1}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => store.removeRow(entry.id),
+                ),
+              ],
+            ),
+            // Food search
+            FoodTypeaheadField(
+              service: service,
+              initialValue: entry.foodName,
+              onHitSelected: (hit) => onHitSelected(entry.id, hit),
+              onError: onError,
+            ),
+            const SizedBox(height: 8),
+            // Quantity + unit row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: qtyController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Qty',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (v) {
+                      store.updateEntry(entry.id, (e) {
+                        e.quantity = double.tryParse(v) ?? 0;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<MealUnit>(
+                  value: entry.unit,
+                  items: MealUnit.values
+                      .map(
+                        (u) => DropdownMenuItem(
+                          value: u,
+                          enabled:
+                              u != MealUnit.piece || entry.pieceAvailable,
+                          child: Text(
+                            u.name,
+                            style: u == MealUnit.piece &&
+                                    !entry.pieceAvailable
+                                ? const TextStyle(color: Colors.grey)
+                                : null,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (u) {
+                    if (u != null) {
+                      store.updateEntry(entry.id, (e) {
+                        e.unit = u;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // Macros chips
+            MacrosChips(entry: entry),
           ],
         ),
       ),

@@ -3,8 +3,6 @@ import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'login/login_utils.dart';
-import '../impact/impact.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -19,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Home Page',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const HomePage(title: 'Home Page', username: "",),
+      home: const HomePage(title: 'Home Page', username: ""),
     );
   }
 }
@@ -31,27 +29,32 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 
-  void needSignUp(BuildContext context) async{
+  void needSignUp(BuildContext context) async {
     final sp = await SharedPreferences.getInstance();
     final user = sp.getStringList(username);
-    if (username.isEmpty || user == null)
-    {
-      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => LoginPage(title: "")));
-    }
-    else if(user[3] == "true"){
-      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => SignInPage(title: "",username: username)));
+    if (username.isEmpty || user == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage(title: "")),
+      );
+    } else if (user[3] == "true") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(title: "", username: username),
+        ),
+      );
     }
   }
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
-  void initState(){
+  void initState() {
     widget.needSignUp(context);
     super.initState();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,24 +67,25 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: .start,
           children: [
             SizedBox(height: 50),
-            ElevatedButton(onPressed: () {
-              //getRememberData(); // Debug
-              //print('Logout'); // Debug
-              logout();
-              //getRememberData(); // Debug
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(title: ''),
-                ),
-              );
-            }, child: Text('Logout')),
+            ElevatedButton(
+              onPressed: () {
+                //getRememberData(); // Debug
+                //print('Logout'); // Debug
+                logout();
+                //getRememberData(); // Debug
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage(title: '')),
+                );
+              },
+              child: Text('Logout'),
+            ),
             Spacer(),
           ],
         ),
       ),
 
-      //navigation bar used in each of the pages. each page will return to the homepage in order 
+      //navigation bar used in each of the pages. each page will return to the homepage in order
       //to maintain a tidy navigation stack
       bottomNavigationBar: BottomAppBar(
         child: Row(
@@ -93,51 +97,56 @@ class _HomePageState extends State<HomePage> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      alignment: Alignment.center, 
-                      title: const Text("Refresh page", style: TextStyle(fontSize: 26)),
+                      alignment: Alignment.center,
+                      title: const Text(
+                        "Refresh page",
+                        style: TextStyle(fontSize: 26),
+                      ),
                       content: const Text("Do you wish to refresh the page?"),
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context); 
-                          }, 
+                            Navigator.pop(context);
+                          },
                           child: const Text("No"),
                         ),
                         FilledButton(
                           onPressed: () {
                             Navigator.pop(context);
                             setState(() {
-
-
                               //SETUP PAGE REFRESH IF NEEDED
-
-
                             });
-                          }, 
+                          },
                           child: const Text("Yes"),
                         ),
                       ],
                     );
                   },
                 );
-              }, 
-              icon: const Icon(Icons.home_filled)),
+              },
+              icon: const Icon(Icons.home_filled),
+            ),
 
             //transfer context to data page
-            IconButton(onPressed: () {
-
-
-              // INSERIRE IL DATO PER IDENTIFICARE LA PAGINA DEI DATI UNA VOLTA CHE SARÀ CREATA
-            
-
-              //Navigator.push(context, MaterialPageRoute(builder: (context) => const DataPage()));
-            }, icon: Icon(Icons.bar_chart)),
-
-           //transfer context to meal page
-           IconButton(
+            IconButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const MealPage(title: "Meal Page")));
-              }, 
+                // INSERIRE IL DATO PER IDENTIFICARE LA PAGINA DEI DATI UNA VOLTA CHE SARÀ CREATA
+
+                //Navigator.push(context, MaterialPageRoute(builder: (context) => const DataPage()));
+              },
+              icon: Icon(Icons.bar_chart),
+            ),
+
+            //transfer context to meal page
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MealPage(username: widget.username),
+                  ),
+                );
+              },
               icon: const Icon(Icons.menu_book),
             ),
           ],
