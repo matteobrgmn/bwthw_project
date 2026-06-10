@@ -3,6 +3,8 @@ import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '/impact/impact.dart';
+import '../widgets/steps_bar_chart.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -50,20 +52,29 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  final impact = Impact();
+  List<StepData> chartData = [];
 
   @override
   void initState() {
-    widget.needSignUp(context);
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.needSignUp(context);
+    });
+    // Get api token and refresh
+    loadChart(); 
   }
 
+  Future<void> loadChart() async {
+  final data = await impactConnection(impact);
+
+  setState(() {
+    chartData = data;
+  });
+}
   @override
   Widget build(BuildContext context) {
-
-
-  final ButtonStyle style = TextButton.styleFrom(
-      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-  );
 
     return Scaffold(
       appBar: AppBar(
@@ -79,7 +90,6 @@ class _HomePageState extends State<HomePage> {
                     builder: (BuildContext context) {
                       return AlertDialog(
                         title: const Text('Are you sure you want to log out of you account?'),
- //                       content: const Text('Fill out all values before submitting the form'),
                         actions: [
                           ElevatedButton(onPressed: (){
                             Navigator.pop(context);
@@ -99,14 +109,13 @@ class _HomePageState extends State<HomePage> {
         ],
 
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: .start,
-          children: [
-            SizedBox(height: 50),
-            Spacer(),
-          ],
-        ),
+      body: ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+             StepsBarChart(data: chartData),
+             SizedBox(height: 20),
+             Text("Altri widget"),
+            ],
       ),
 
       //navigation bar used in each of the pages. each page will return to the homepage in order
@@ -193,3 +202,29 @@ Future<void> logout(BuildContext context) async {
   );
 }
 
+Future<List<StepData>> impactConnection(Impact impact) async {
+  await impact.authentication();
+  final mapOfDates = await impact.getStepsBtwTwoDates('2024-05-04', '2024-05-11');
+
+  final chartData = convertToChartData(mapOfDates!);
+
+  return chartData;
+}
+
+List<StepData> convertToChartData(Map<String, dynamic> data) {
+  final entries = data.entries.toList()
+    ..sort((a, b) => a.key.compareTo(b.key));
+
+  return entries.map((e) {
+    final date = DateTime.parse(e.key);
+
+    const days = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+
+    final label = days[date.weekday - 1];
+
+    return StepData(
+      label,
+      (e.value as num).toInt(), // 🔥 FIX QUI
+    );
+  }).toList();
+}
