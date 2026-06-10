@@ -49,6 +49,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+
   @override
   void initState() {
     widget.needSignUp(context);
@@ -57,29 +59,51 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+
+  final ButtonStyle style = TextButton.styleFrom(
+      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+  );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title : Text('Home'),
+        actions: <Widget>[
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Are you sure you want to log out of you account?'),
+ //                       content: const Text('Fill out all values before submitting the form'),
+                        actions: [
+                          ElevatedButton(onPressed: (){
+                            Navigator.pop(context);
+                            // Logout 
+                            logout(context);
+                          }, child: Text('Yes')),
+                          ElevatedButton(onPressed: (){
+                            // Close dialog
+                            Navigator.pop(context);
+                          }, child: Text('No'))
+                        ],
+                      );
+                    },
+                  );
+            },
+          ),
+        ],
+
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: .start,
           children: [
             SizedBox(height: 50),
-            ElevatedButton(
-              onPressed: () {
-                //getRememberData(); // Debug
-                //print('Logout'); // Debug
-                logout();
-                //getRememberData(); // Debug
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage(title: '')),
-                );
-              },
-              child: Text('Logout'),
-            ),
             Spacer(),
           ],
         ),
@@ -157,7 +181,15 @@ class _HomePageState extends State<HomePage> {
 }
 
 /* Function for logout */
-void logout() async {
+Future<void> logout(BuildContext context) async {
   final sp = await SharedPreferences.getInstance();
   await sp.setBool('rememberLogin', false);
+  
+ if (!context.mounted) return;
+
+  Navigator.pushReplacement(
+    context, 
+    MaterialPageRoute(builder: (context) => LoginPage(title: '')),
+  );
 }
+
