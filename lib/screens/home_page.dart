@@ -1,3 +1,4 @@
+import 'package:bwthw_project/screens/data_page.dart';
 import 'package:bwthw_project/screens/login/login_page.dart';
 import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:bwthw_project/screens/sign_in_page.dart';
@@ -51,7 +52,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   final impact = Impact();
   List<StepData> chartData = [];
 
@@ -63,59 +63,66 @@ class _HomePageState extends State<HomePage> {
       widget.needSignUp(context);
     });
     // Get api token and refresh
-    loadChart(); 
+    loadChart();
   }
 
   Future<void> loadChart() async {
-  final data = await impactConnection(impact);
+    final data = await impactConnection(impact);
 
-  setState(() {
-    chartData = data;
-  });
-}
+    setState(() {
+      chartData = data;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title : Text('Home'),
+        title: Text('Home'),
         actions: <Widget>[
           // Logout button
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Are you sure you want to log out of you account?'),
-                        actions: [
-                          ElevatedButton(onPressed: (){
-                            Navigator.pop(context);
-                            // Logout 
-                            logout(context);
-                          }, child: Text('Yes')),
-                          ElevatedButton(onPressed: (){
-                            // Close dialog
-                            Navigator.pop(context);
-                          }, child: Text('No'))
-                        ],
-                      );
-                    },
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text(
+                      'Are you sure you want to log out of you account?',
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // Logout
+                          logout(context);
+                        },
+                        child: Text('Yes'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Close dialog
+                          Navigator.pop(context);
+                        },
+                        child: Text('No'),
+                      ),
+                    ],
                   );
+                },
+              );
             },
           ),
         ],
-
       ),
       body: ListView(
-            padding: const EdgeInsets.all(12),
-            children: [
-             StepsBarChart(data: chartData),
-             SizedBox(height: 20),
-             Text("Altri widget"),
-            ],
+        padding: const EdgeInsets.all(12),
+        children: [
+          StepsBarChart(data: chartData),
+          SizedBox(height: 20),
+          Text("Altri widget"),
+        ],
       ),
 
       //navigation bar used in each of the pages. each page will return to the homepage in order
@@ -160,25 +167,55 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.home_filled),
             ),
 
-            //transfer context to data page
             IconButton(
-              onPressed: () {
-                // INSERIRE IL DATO PER IDENTIFICARE LA PAGINA DEI DATI UNA VOLTA CHE SARÀ CREATA
-
-                //Navigator.push(context, MaterialPageRoute(builder: (context) => const DataPage()));
+              onPressed: () async {
+                String? nav = "data";
+                do {
+                  if (nav == "data") {
+                    nav = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DataPage(username: widget.username),
+                      ),
+                    );
+                  } else if (nav == "meal") {
+                    nav = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            MealPage(username: widget.username),
+                      ),
+                    );
+                  }
+                } while (nav != null && nav != "home");
               },
-              icon: Icon(Icons.bar_chart),
+              icon: const Icon(Icons.bar_chart),
             ),
 
             //transfer context to meal page
             IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MealPage(username: widget.username),
-                  ),
-                );
+              onPressed: () async {
+                String? nav = "meal";
+                do {
+                  if (nav == "meal") {
+                    nav = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            MealPage(username: widget.username),
+                      ),
+                    );
+                  } else if (nav == "data") {
+                    nav = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DataPage(username: widget.username),
+                      ),
+                    );
+                  }
+                } while (nav != null && nav != "home");
               },
               icon: const Icon(Icons.menu_book),
             ),
@@ -193,18 +230,21 @@ class _HomePageState extends State<HomePage> {
 Future<void> logout(BuildContext context) async {
   final sp = await SharedPreferences.getInstance();
   await sp.setBool('rememberLogin', false);
-  
- if (!context.mounted) return;
+
+  if (!context.mounted) return;
 
   Navigator.pushReplacement(
-    context, 
+    context,
     MaterialPageRoute(builder: (context) => LoginPage(title: '')),
   );
 }
 
 Future<List<StepData>> impactConnection(Impact impact) async {
   await impact.authentication();
-  final mapOfDates = await impact.getStepsBtwTwoDates('2024-05-04', '2024-05-11');
+  final mapOfDates = await impact.getStepsBtwTwoDates(
+    '2024-05-04',
+    '2024-05-11',
+  );
 
   final chartData = convertToChartData(mapOfDates!);
 
@@ -212,8 +252,7 @@ Future<List<StepData>> impactConnection(Impact impact) async {
 }
 
 List<StepData> convertToChartData(Map<String, dynamic> data) {
-  final entries = data.entries.toList()
-    ..sort((a, b) => a.key.compareTo(b.key));
+  final entries = data.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
   return entries.map((e) {
     final date = DateTime.parse(e.key);

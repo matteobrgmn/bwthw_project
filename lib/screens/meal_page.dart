@@ -14,9 +14,9 @@ import 'package:bwthw_project/widgets/macros_chips.dart';
 import 'package:bwthw_project/widgets/totals_card.dart';
 
 extension _StringExt on String {
-  String capitalize() =>  isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+  String capitalize() =>
+      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
-
 
 class MealPage extends StatefulWidget {
   const MealPage({super.key, required this.username});
@@ -33,28 +33,28 @@ class _MealPageState extends State<MealPage> {
   bool _initialized = false;
   String? _initError;
 
-  final Map<String, TextEditingController> _qtyControllers = {}; //handling of quantity inputs
+  final Map<String, TextEditingController> _qtyControllers =
+      {}; //handling of quantity inputs
 
   @override
-  void initState()  {
+  void initState() {
     super.initState();
     _init();
   }
 
   //initialize with sharedpreferences data and create meal handling objects
   Future<void> _init() async {
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
       _store = MealStore(prefs: prefs, username: widget.username);
       _service = NutritionService();
       await _store.load();
-      if(mounted) setState(() => _initialized = true);
-    }
-    catch(e){
-       if(mounted) setState(() => _initError = e.toString());
+      if (mounted) setState(() => _initialized = true);
+    } catch (e) {
+      if (mounted) setState(() => _initError = e.toString());
     }
 
-      setState(() => _initialized = true);
+    setState(() => _initialized = true);
   }
 
   @override
@@ -82,7 +82,9 @@ class _MealPageState extends State<MealPage> {
       _showSnackBar('Network error: ${e.cause}');
     } on NutritionSchemaException catch (e) {
       debugPrint('NutritionSchemaException: ${e.errors}');
-      _showSnackBar('Could not read nutrition data for this food. Try a different name.');
+      _showSnackBar(
+        'Could not read nutrition data for this food. Try a different name.',
+      );
     }
   }
 
@@ -93,8 +95,9 @@ class _MealPageState extends State<MealPage> {
 
   //handles user communication
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   //initialize page
@@ -104,7 +107,7 @@ class _MealPageState extends State<MealPage> {
       title: const Text('Meal Register'),
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
     );
-    
+
     //if there's an error in initiation, then retry initiation
     if (_initError != null) {
       return Scaffold(
@@ -150,16 +153,13 @@ class _MealPageState extends State<MealPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.home),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(context, "home"),
               ),
               IconButton(
                 icon: const Icon(Icons.bar_chart),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(context, "data"),
               ),
-              ElevatedButton(
-                onPressed: _save,
-                child: const Text('Save'),
-              ),
+              ElevatedButton(onPressed: _save, child: const Text('Save')),
             ],
           ),
         ),
@@ -176,9 +176,9 @@ class _MealPageState extends State<MealPage> {
             .where((id) => !currentIds.contains(id))
             .toList()
             .forEach((id) {
-          _qtyControllers[id]!.dispose();
-          _qtyControllers.remove(id);
-        });
+              _qtyControllers[id]!.dispose();
+              _qtyControllers.remove(id);
+            });
         for (final entry in store.entries) {
           _qtyControllers.putIfAbsent(
             entry.id,
@@ -218,7 +218,6 @@ class _MealPageState extends State<MealPage> {
     );
   }
 }
-
 
 class _SlotDropdown extends StatelessWidget {
   const _SlotDropdown({required this.store});
@@ -346,12 +345,10 @@ class _MealEntryRow extends StatelessWidget {
                       .map(
                         (u) => DropdownMenuItem(
                           value: u,
-                          enabled:
-                              u != MealUnit.piece || entry.pieceAvailable,
+                          enabled: u != MealUnit.piece || entry.pieceAvailable,
                           child: Text(
                             u.name,
-                            style: u == MealUnit.piece &&
-                                    !entry.pieceAvailable
+                            style: u == MealUnit.piece && !entry.pieceAvailable
                                 ? const TextStyle(color: Colors.grey)
                                 : null,
                           ),
