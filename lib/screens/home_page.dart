@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const Text(
-                      'Are you sure you want to log out of you account?',
+                      'Are you sure you want to log out of your account?',
                     ),
                     actions: [
                       ElevatedButton(
@@ -242,8 +242,8 @@ Future<void> logout(BuildContext context) async {
 Future<List<StepData>> impactConnection(Impact impact) async {
   await impact.authentication();
   final mapOfDates = await impact.getStepsBtwTwoDates(
-    '2024-05-04',
-    '2024-05-11',
+    '2026-06-04',
+    '2026-06-11',
   );
 
   final chartData = convertToChartData(mapOfDates!);
