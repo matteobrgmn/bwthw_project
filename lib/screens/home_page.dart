@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/impact/impact.dart';
 import '../widgets/steps_bar_chart.dart';
+import 'package:provider/provider.dart';
+import '../providers/data_provider.dart';
+import '../providers/data_provider.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -53,7 +56,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final impact = Impact();
-  List<StepData> chartData = [];
 
   @override
   void initState() {
@@ -62,20 +64,25 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.needSignUp(context);
     });
-    // Get api token and refresh
-    loadChart();
-  }
-
-  Future<void> loadChart() async {
-    final data = await impactConnection(impact);
-
-    setState(() {
-      chartData = data;
+    Future.microtask(() {
+      context.read<DataProvider>().start();
     });
   }
 
   @override
+  void dispose() {
+    context.read<DataProvider>().stop();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<DataProvider>();
+    
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -119,9 +126,80 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          StepsBarChart(data: chartData),
+          Text(
+              "Hello ${widget.username}!",
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
           SizedBox(height: 20),
-          Text("Altri widget"),
+          Row(
+            children: [
+              Icon(Icons.directions_walk),
+              SizedBox(width: 10),
+              Text(
+                "Daily steps: ${provider.stepsDay}",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: [
+              Icon(Icons.local_dining),
+              SizedBox(width: 10),
+              Text(
+                "Daily calories: ${provider.caloriesDay}",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          StepsBarChart(data: provider.stepsBtwTwoDates),
+          SizedBox(height: 20),
+          Row( children : [
+            SizedBox(width: 20),
+            if (provider.increaseStepPerc > 0)
+              const Icon(
+                Icons.local_fire_department,
+                color: Colors.red,
+                size: 30,
+              )
+            else
+              const Icon(
+              Icons.sentiment_very_dissatisfied,
+              color: Colors.blue,
+              size: 30,
+            ),
+            SizedBox(width: 5),
+            Text(
+              "${provider.increaseStepPerc > 0 ? '+' : ''}${provider.increaseStepPerc}%",
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            SizedBox(width: 10),
+            Text(
+                "from last week!",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.5,
+                ),
+            ),          ]
+        ),// Step perc from last week
         ],
       ),
 
@@ -237,33 +315,4 @@ Future<void> logout(BuildContext context) async {
     context,
     MaterialPageRoute(builder: (context) => LoginPage(title: '')),
   );
-}
-
-Future<List<StepData>> impactConnection(Impact impact) async {
-  await impact.authentication();
-  final mapOfDates = await impact.getStepsBtwTwoDates(
-    '2026-06-04',
-    '2026-06-11',
-  );
-
-  final chartData = convertToChartData(mapOfDates!);
-
-  return chartData;
-}
-
-List<StepData> convertToChartData(Map<String, dynamic> data) {
-  final entries = data.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
-
-  return entries.map((e) {
-    final date = DateTime.parse(e.key);
-
-    const days = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
-    final label = days[date.weekday - 1];
-
-    return StepData(
-      label,
-      (e.value as num).toInt(), // 🔥 FIX QUI
-    );
-  }).toList();
 }

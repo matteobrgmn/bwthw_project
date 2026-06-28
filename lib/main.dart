@@ -4,9 +4,17 @@ import 'package:flutter/material.dart';
 import 'screens/login/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/sign_in_page.dart';
+import 'package:provider/provider.dart';
+import 'providers/data_provider.dart';
+
 
 void main() {
-  runApp(MainApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => DataProvider(),
+      child: MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatefulWidget {

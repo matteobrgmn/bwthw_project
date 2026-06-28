@@ -1,6 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import '../widgets/steps_bar_chart.dart';
+
 // import 'package:intl/intl.dart';
 
 /* This class manages the communication with impact database */
@@ -16,6 +18,7 @@ class Impact{
   static final _password = '12345678!';
   static String patientUsername = 'Jpefaq6m58';
   static final _stepsSingleDayUrl = "data/v1/steps/patients/$patientUsername/day/";
+  static final _caloriesSingleDayUrl = "data/v1/calories/patients/$patientUsername/day/";
   static final _stepsBtwTwoDates = "data/v1/steps/patients/$patientUsername/";
   static final _caloriesBtwTwoDates = "data/v1/calories/patients/$patientUsername/";
   static String _token = 'empty';
@@ -77,33 +80,63 @@ class Impact{
 
   /* Return steps for a single day given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 */
   Future<int> getStepsSingleDay(String day) async {
-  var numberOfSteps = 0;
-  if (JwtDecoder.isExpired(_token)){
-    await refresh();
-    // print('expired'); // Debug
-  };
-  
-  final response = await http.get(
-    Uri.parse(_baseUrl + _stepsSingleDayUrl + day),
-    headers: {
-      'Authorization': 'Bearer $_token',
-    },
-  );
-  if (response.statusCode == 200) {
-    final responseDecodedBody = jsonDecode(response.body);
-    for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
-      if (responseDecodedBody['data']['data'][i]['value'] != null) {
-        numberOfSteps = numberOfSteps + int.parse(responseDecodedBody['data']['data'][i]['value']);
+    var numberOfSteps = 0;
+    if (JwtDecoder.isExpired(_token)){
+      await refresh();
+      // print('expired'); // Debug
+    };
+    
+    final response = await http.get(
+      Uri.parse(_baseUrl + _stepsSingleDayUrl + day),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final responseDecodedBody = jsonDecode(response.body);
+      for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
+        if (responseDecodedBody['data']['data'][i]['value'] != null) {
+          numberOfSteps = numberOfSteps + int.parse(responseDecodedBody['data']['data'][i]['value']);
+        }
       }
+      // print(numberOfSteps); // Debug
+      return numberOfSteps;
+      } else {
+      // print(-1); // Debug
+      // print(response.statusCode);
+      // print(response.body);
+      return -1;
     }
-    // print(numberOfSteps); // Debug
-    return numberOfSteps;
-    } else {
-    // print(-1); // Debug
-    // print(response.statusCode);
-    // print(response.body);
-    return -1;
   }
+
+  /* Return calories for a single day given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 */
+  Future<int> getCaloriesSingleDay(String day) async {
+    double numberOfCalories = 0;
+    if (JwtDecoder.isExpired(_token)){
+      await refresh();
+      // print('expired'); // Debug
+    };
+    
+    final response = await http.get(
+      Uri.parse(_baseUrl + _caloriesSingleDayUrl + day),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final responseDecodedBody = jsonDecode(response.body);
+      for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
+        if (responseDecodedBody['data']['data'][i]['value'] != null) {
+          numberOfCalories = numberOfCalories + double.parse(responseDecodedBody['data']['data'][i]['value']);
+        }
+      }
+      return numberOfCalories.toInt();
+      } else {
+      // print(-1); // Debug
+      // print(response.statusCode);
+      // print(response.body);
+      return -1;
+    }
   }
 
   /* Return steps for each day between a start and end date given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 
@@ -220,4 +253,35 @@ class Impact{
     print('Refresh $_refresh');
     print('Token $_token');
   }
+}
+
+/* Function to connect to the server and get steps between two dates */
+Future<List<StepData>> impactConnection(Impact impact) async {
+  await impact.authentication();
+  final mapOfDates = await impact.getStepsBtwTwoDates(
+    '2026-06-04',
+    '2026-06-11',
+  );
+
+  final chartData = convertToChartData(mapOfDates!);
+
+  return chartData;
+}
+
+/* Function to convert the data in order to put in the chart */
+List<StepData> convertToChartData(Map<String, dynamic> data) {
+  final entries = data.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+
+  return entries.map((e) {
+    final date = DateTime.parse(e.key);
+
+    const days = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+
+    final label = days[date.weekday - 1];
+
+    return StepData(
+      label,
+      (e.value as num).toInt(),
+    );
+  }).toList();
 }

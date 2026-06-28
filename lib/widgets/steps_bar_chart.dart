@@ -62,7 +62,7 @@ class StepsBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Passi settimanali",
+            "Weekly steps",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
