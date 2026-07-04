@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dart:math' as math;
+
 import 'package:bwthw_project/impact/impact.dart';
 import 'package:bwthw_project/nutrition/models/meal_entry.dart';
 import 'package:bwthw_project/state/meal_store.dart';
+import 'package:bwthw_project/theme.dart';
 import 'package:bwthw_project/widgets/calories_bar_chart.dart';
 
 class DataPage extends StatefulWidget {
@@ -133,10 +136,7 @@ class _DataPageState extends State<DataPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appBar = AppBar(
-      title: const Text('Weekly Data'),
-      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-    );
+    final appBar = AppBar(title: const Text('Weekly Data'));
 
     //if page NOT initialized properly, then display error message and reattempt initializing
     if (_initError != null) {
@@ -179,13 +179,13 @@ class _DataPageState extends State<DataPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
-          CaloriesBarChart(data: _chartData),
           _WeightPredictionCard(
             totalConsumed: _totalConsumed,
             totalBurned: _totalBurned,
             netDeficit: _netDeficit,
             weightChange: _weightChange,
           ),
+          CaloriesBarChart(data: _chartData),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -196,7 +196,11 @@ class _DataPageState extends State<DataPage> {
               icon: const Icon(Icons.home),
               onPressed: () => Navigator.pop(context, "home"),
             ),
-            IconButton(icon: const Icon(Icons.bar_chart), onPressed: () {}),
+            IconButton(
+              icon: const Icon(Icons.bar_chart),
+              color: AppColors.accent, //active tab
+              onPressed: () {},
+            ),
             IconButton(
               icon: const Icon(Icons.menu_book),
               onPressed: () => Navigator.pop(context, "meal"),
@@ -228,7 +232,8 @@ class _WeightPredictionCard extends StatelessWidget {
 
     //depending upon change trend display positive or negative trend indicator
     final isLoss = weightChange >= 0;
-    final color = noChange ? Colors.grey : (isLoss ? Colors.green : Colors.red);
+    final color =
+        noChange ? AppColors.muted : (isLoss ? AppColors.accent : AppColors.danger);
     final icon = noChange
         ? Icons.trending_flat
         : (isLoss ? Icons.trending_down : Icons.trending_up);
@@ -239,33 +244,33 @@ class _WeightPredictionCard extends StatelessWidget {
     //produces the body of the widget from read data
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Weekly Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          Text('WEEKLY SUMMARY', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 16),
+          //arc gauge: consumed vs burned, net deficit in the middle
+          Center(
+            child: _DeficitRing(
+              consumed: totalConsumed,
+              burned: totalBurned,
+              netDeficit: netDeficit,
+              color: color,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _InfoRow(
             'Calories consumed',
             '${totalConsumed.toStringAsFixed(0)} kcal',
           ),
           _InfoRow('Calories burned', '${totalBurned.toStringAsFixed(0)} kcal'),
           const Divider(height: 20),
-          _InfoRow(
-            netDeficit >= 0 ? 'Total deficit' : 'Total surplus',
-            '${netDeficit.abs().toStringAsFixed(0)} kcal',
-          ),
-          const SizedBox(height: 12),
           Row(
             children: [
               Icon(icon, color: color, size: 36),
@@ -283,11 +288,7 @@ class _WeightPredictionCard extends StatelessWidget {
                   ),
                   Text(
                     '~${weightChange.abs().toStringAsFixed(2)} kg this week',
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: displayNumber(size: 26, color: color),
                   ),
                 ],
               ),
@@ -297,6 +298,86 @@ class _WeightPredictionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+//270° arc gauge showing calories consumed as a fraction of calories burned
+class _DeficitRing extends StatelessWidget {
+  const _DeficitRing({
+    required this.consumed,
+    required this.burned,
+    required this.netDeficit,
+    required this.color,
+  });
+
+  final double consumed;
+  final double burned;
+  final double netDeficit;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final fraction =
+        burned > 0 ? (consumed / burned).clamp(0.0, 1.0) : 0.0;
+
+    return SizedBox(
+      width: 190,
+      height: 190,
+      child: CustomPaint(
+        painter: _RingPainter(fraction: fraction, color: color),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${netDeficit >= 0 ? '' : '+'}${netDeficit.abs().toStringAsFixed(0)}',
+                style: displayNumber(size: 44, color: color),
+              ),
+              Text(
+                netDeficit >= 0 ? 'KCAL DEFICIT' : 'KCAL SURPLUS',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  const _RingPainter({required this.fraction, required this.color});
+
+  final double fraction;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 12.0;
+    const startAngle = 3 * math.pi / 4; //bottom-left, 270° sweep
+    const maxSweep = 3 * math.pi / 2;
+    final rect = Offset.zero & size;
+    final arcRect = rect.deflate(stroke / 2);
+
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = AppColors.outline;
+    canvas.drawArc(arcRect, startAngle, maxSweep, false, track);
+
+    if (fraction > 0) {
+      final fill = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..color = color;
+      canvas.drawArc(arcRect, startAngle, maxSweep * fraction, false, fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.fraction != fraction || old.color != color;
 }
 
 //displays information in a row inside _WeightPredictionWidget
@@ -313,7 +394,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.black54)),
+          Text(label, style: const TextStyle(color: AppColors.muted)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bwthw_project/nutrition/models/meal_entry.dart';
+import 'package:bwthw_project/theme.dart';
 
 //handy display of macros in chip format
 class MacrosChips extends StatelessWidget {
@@ -19,27 +20,33 @@ class MacrosChips extends StatelessWidget {
     String c = hasData ? 'C ${entry.scaledCarbs.toStringAsFixed(1)}g' : 'C —';
     String f = hasData ? 'F ${entry.scaledFat.toStringAsFixed(1)}g' : 'F —';
 
-    final labels = [kcal, p, c, f];
+    //one accent color per macro, ex1-style
+    final chips = [
+      (kcal, AppColors.text),
+      (p, AppColors.protein),
+      (c, AppColors.carbs),
+      (f, AppColors.fat),
+    ];
 
     //wrap and container for appropriate spacing and displaying
     return Wrap(
       spacing: 4,
       runSpacing: 2,
-      children: labels.map((label) {
+      children: chips.map((chip) {
+        final (label, color) = chip;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             border: Border.all(
-              color: hasData
-                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                  : muted,
+              color: hasData ? color.withValues(alpha: 0.5) : muted,
             ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: hasData ? theme.colorScheme.onSurface : muted,
+              color: hasData ? color : muted,
+              fontWeight: FontWeight.w600,
             ),
           ),
         );

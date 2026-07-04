@@ -8,7 +8,7 @@ import '/impact/impact.dart';
 import '../widgets/steps_bar_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
-import '../providers/data_provider.dart';
+import '../theme.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -56,6 +56,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final impact = Impact();
+  late DataProvider _dataProvider;
 
   @override
   void initState() {
@@ -70,8 +71,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _dataProvider = context.read<DataProvider>();
+  }
+
+  @override
   void dispose() {
-    context.read<DataProvider>().stop();
+    _dataProvider.stop();
     super.dispose();
   }
 
@@ -85,7 +92,6 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('Home'),
         actions: <Widget>[
           // Logout button
@@ -124,82 +130,99 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
-          Text(
-              "Hello ${widget.username}!",
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WELCOME BACK',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(
+                  widget.username,
+                  style: displayNumber(size: 44),
+                ),
+              ],
             ),
+          ),
           SizedBox(height: 20),
+          //yesterday's steps and burned calories side by side
           Row(
             children: [
-              Icon(Icons.directions_walk),
-              SizedBox(width: 10),
-              Text(
-                "Daily steps: ${provider.stepsDay}",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.directions_walk,
+                  label: 'STEPS',
+                  value: '${provider.stepsDay}',
+                  color: AppColors.accent,
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.local_fire_department,
+                  label: 'KCAL BURNED',
+                  value: '${provider.caloriesDay}',
+                  color: AppColors.fat,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20),
-          Row(
-            children: [
-              Icon(Icons.local_dining),
-              SizedBox(width: 10),
-              Text(
-                "Daily calories: ${provider.caloriesDay}",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
+          SizedBox(height: 12),
           StepsBarChart(data: provider.stepsBtwTwoDates),
-          SizedBox(height: 20),
-          Row( children : [
-            SizedBox(width: 20),
-            if (provider.increaseStepPerc > 0)
-              const Icon(
-                Icons.local_fire_department,
-                color: Colors.red,
-                size: 30,
-              )
-            else
-              const Icon(
-              Icons.sentiment_very_dissatisfied,
-              color: Colors.blue,
-              size: 30,
-            ),
-            SizedBox(width: 5),
-            Text(
-              "${provider.increaseStepPerc > 0 ? '+' : ''}${provider.increaseStepPerc}%",
-              style: const TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
-              ),
-            ),
-            SizedBox(width: 10),
-            Text(
-                "from last week!",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.5,
+          SizedBox(height: 12),
+          // Step perc from last week
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: provider.increaseStepPerc > 0
+                        ? AppColors.accent.withValues(alpha: 0.12)
+                        : AppColors.danger.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        provider.increaseStepPerc > 0
+                            ? Icons.trending_up
+                            : Icons.trending_down,
+                        color: provider.increaseStepPerc > 0
+                            ? AppColors.accent
+                            : AppColors.danger,
+                        size: 22,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "${provider.increaseStepPerc > 0 ? '+' : ''}${provider.increaseStepPerc}%",
+                        style: displayNumber(
+                          size: 24,
+                          color: provider.increaseStepPerc > 0
+                              ? AppColors.accent
+                              : AppColors.danger,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-            ),          ]
-        ),// Step perc from last week
+                SizedBox(width: 10),
+                Text(
+                  "from last week",
+                  style: TextStyle(fontSize: 15, color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
 
@@ -243,6 +266,7 @@ class _HomePageState extends State<HomePage> {
                 );
               },
               icon: const Icon(Icons.home_filled),
+              color: AppColors.accent, //active tab
             ),
 
             IconButton(
@@ -299,6 +323,43 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+//compact stat card with icon, big numeral and label
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 10),
+          Text(value, style: displayNumber(size: 34)),
+          const SizedBox(height: 2),
+          Text(label, style: Theme.of(context).textTheme.titleSmall),
+        ],
       ),
     );
   }

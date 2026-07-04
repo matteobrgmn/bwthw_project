@@ -8,7 +8,6 @@ import 'package:bwthw_project/nutrition/models/food_search_hit.dart';
 import 'package:bwthw_project/nutrition/nutrition_exceptions.dart';
 import 'package:bwthw_project/nutrition/schema_validator.dart';
 
-
 //USDA API-communication service. Retrieves query results and manages them, avoids repeated access
 class NutritionService {
   //host website
@@ -31,7 +30,6 @@ class NutritionService {
   //disposes of client
   void dispose() => _client.close();
 
-
   //search query with a normalized string, returns 5 items and reuses unless changed
   Future<List<FoodSearchHit>> search(String query) async {
     final normalised = query.trim().toLowerCase();
@@ -39,7 +37,7 @@ class NutritionService {
     if (_searchCache.containsKey(normalised)) {
       return _searchCache[normalised]!;
     }
-    await dotenv.load(fileName: ".env");  //loads API key from .env file
+    await dotenv.load(fileName: "assets/.env"); //loads API key from .env file
     final apiKey = dotenv.env['USDA_API_KEY'] ?? '';
 
     //root of request url:https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY

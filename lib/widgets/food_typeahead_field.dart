@@ -140,7 +140,6 @@ class _FoodTypeaheadFieldState extends State<FoodTypeaheadField> {
                     ),
                   )
                 : null,
-            border: const OutlineInputBorder(),
           ),
         ),
         //if there are hits for the query, makes them appear as a dropdown
@@ -148,9 +147,10 @@ class _FoodTypeaheadFieldState extends State<FoodTypeaheadField> {
           Material(
             elevation: 4,
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(4),
-              bottomRight: Radius.circular(4),
+              bottomLeft: Radius.circular(14),
+              bottomRight: Radius.circular(14),
             ),
+            clipBehavior: Clip.antiAlias,
             child: ListView.builder(
               padding: EdgeInsets.zero,
               shrinkWrap: true,

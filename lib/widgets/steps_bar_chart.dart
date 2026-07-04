@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import 'package:bwthw_project/theme.dart';
+
 class StepData {
   final String label;
   final int value;
@@ -44,29 +46,20 @@ class StepsBarChart extends StatelessWidget {
     final maxValue = _maxY();
 
     return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.all(20),
       height: 280,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 14,
-            color: Colors.black.withOpacity(0.08),
-            offset: const Offset(0, 6),
-          )
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Weekly steps",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+          Text(
+            'WEEKLY STEPS',
+            style: Theme.of(context).textTheme.titleSmall,
           ),
 
           const SizedBox(height: 16),
@@ -75,7 +68,15 @@ class StepsBarChart extends StatelessWidget {
             child: BarChart(
               BarChartData(
                 maxY: maxValue + 1000,
-                gridData: FlGridData(show: true, drawVerticalLine: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => const FlLine(
+                    color: AppColors.outline,
+                    strokeWidth: 1,
+                    dashArray: [4, 6],
+                  ),
+                ),
                 borderData: FlBorderData(show: false),
 
                 titlesData: FlTitlesData(
@@ -88,9 +89,16 @@ class StepsBarChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         int i = value.toInt();
                         if (i < 0 || i >= data.length) return const Text("");
-                        return Text(
-                          data[i].label,
-                          style: const TextStyle(fontSize: 11),
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            data[i].label,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.muted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -104,7 +112,10 @@ class StepsBarChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: const TextStyle(fontSize: 10),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.muted,
+                          ),
                         );
                       },
                     ),
@@ -126,8 +137,11 @@ class StepsBarChart extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                         gradient: LinearGradient(
                           colors: isMax
-                              ? [Colors.orange, Colors.deepOrange]
-                              : [Colors.deepPurple, Colors.purpleAccent],
+                              ? [AppColors.accent, const Color(0xFFE9FF70)]
+                              : [
+                                  AppColors.accent.withValues(alpha: 0.25),
+                                  AppColors.accent.withValues(alpha: 0.55),
+                                ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),

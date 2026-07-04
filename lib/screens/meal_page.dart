@@ -103,10 +103,7 @@ class _MealPageState extends State<MealPage> {
   //initialize page
   @override
   Widget build(BuildContext context) {
-    final appBar = AppBar(
-      title: const Text('Meal Register'),
-      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-    );
+    final appBar = AppBar(title: const Text('Meals'));
 
     //if there's an error in initiation, then retry initiation
     if (_initError != null) {
@@ -226,22 +223,24 @@ class _SlotDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //horizontal chip selector, one chip per meal slot
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Center(
-        child: DropdownButton<MealSlot>(
-          value: store.currentSlot,
-          items: MealSlot.values
-              .map(
-                (slot) => DropdownMenuItem(
-                  value: slot,
-                  child: Text(slot.name.capitalize()),
-                ),
-              )
-              .toList(),
-          onChanged: (slot) {
-            if (slot != null) store.selectSlot(slot);
-          },
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: MealSlot.values.map((slot) {
+            final selected = slot == store.currentSlot;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(slot.name.capitalize()),
+                selected: selected,
+                showCheckmark: false,
+                onSelected: (_) => store.selectSlot(slot),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -300,12 +299,13 @@ class _MealEntryRow extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Entry #${index + 1}',
+                  'ENTRY ${index + 1}',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
+                  color: Theme.of(context).colorScheme.error,
                   onPressed: () => store.removeRow(entry.id),
                 ),
               ],
@@ -327,10 +327,7 @@ class _MealEntryRow extends StatelessWidget {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Qty',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Qty'),
                     onChanged: (v) {
                       store.updateEntry(entry.id, (e) {
                         e.quantity = double.tryParse(v) ?? 0;

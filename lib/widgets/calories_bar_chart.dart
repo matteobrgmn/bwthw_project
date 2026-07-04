@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import 'package:bwthw_project/theme.dart';
+
 class CalorieData {
   final String label;
   final double value;
@@ -31,29 +33,35 @@ class CaloriesBarChart extends StatelessWidget {
     final maxValue = _maxY();
 
     return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.all(20),
       height: 280,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Calorie settimanali',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          Text(
+            'WEEKLY CALORIES',
+            style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 16),
           Expanded(
             child: BarChart(
               BarChartData(
                 maxY: maxValue > 0 ? maxValue + 500 : 2500,
-                gridData: const FlGridData(show: true, drawVerticalLine: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => const FlLine(
+                    color: AppColors.outline,
+                    strokeWidth: 1,
+                    dashArray: [4, 6],
+                  ),
+                ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
@@ -72,7 +80,11 @@ class CaloriesBarChart extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             data[i].label,
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         );
                       },
@@ -87,7 +99,10 @@ class CaloriesBarChart extends StatelessWidget {
                         if (value == 0) return const SizedBox();
                         return Text(
                           value.toInt().toString(),
-                          style: const TextStyle(fontSize: 10),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.muted,
+                          ),
                         );
                       },
                     ),
@@ -105,8 +120,11 @@ class CaloriesBarChart extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                         gradient: LinearGradient(
                           colors: isMax
-                              ? [Colors.orange, Colors.deepOrange]
-                              : [Colors.orangeAccent, Colors.orange],
+                              ? [AppColors.fat, const Color(0xFFFFD466)]
+                              : [
+                                  AppColors.fat.withValues(alpha: 0.3),
+                                  AppColors.fat.withValues(alpha: 0.6),
+                                ],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),

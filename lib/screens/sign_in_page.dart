@@ -1,4 +1,5 @@
 import 'package:bwthw_project/screens/home_page.dart';
+import 'package:bwthw_project/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -82,18 +83,20 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       body: Center(
+        child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: .start,
           children: [
-            SizedBox(height: 50),
-            Title(
-              color: Colors.black,
-              child: Text("Profiling data:", style: TextStyle(fontSize: 30)),
+            SizedBox(height: 30),
+            Text(
+              'ABOUT YOU',
+              style: Theme.of(context).textTheme.titleSmall,
             ),
+            Text('Profiling data', style: displayNumber(size: 40)),
+            SizedBox(height: 16),
 
             //height
             Padding(
@@ -107,8 +110,7 @@ class _SignInPageState extends State<SignInPage> {
                 decoration: InputDecoration(
                   labelText: 'Height',
                   hintText: 'Enter your height (cm)',
-                  prefixIcon: Icon(Icons.key),
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.height),
                 ),
               ),
             ),
@@ -126,7 +128,6 @@ class _SignInPageState extends State<SignInPage> {
                   labelText: 'Weight',
                   hintText: 'Enter your weight (Kg)',
                   prefixIcon: Icon(Icons.monitor_weight),
-                  border: OutlineInputBorder(),
                 ),
               ),
             ),
@@ -140,7 +141,6 @@ class _SignInPageState extends State<SignInPage> {
                   labelText: 'Date of birth',
                   hintText: 'date of birth',
                   prefixIcon: Icon(Icons.calendar_month),
-                  border: OutlineInputBorder(),
                 ),
                 onTap: _selectDate,
               ),
@@ -202,6 +202,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ],
         ),
+       ),
       ),
     );
   }

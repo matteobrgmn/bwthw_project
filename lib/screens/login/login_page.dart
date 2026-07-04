@@ -1,5 +1,6 @@
 import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
+import '../../theme.dart';
 import '../debug_page.dart';
 import '../home_page.dart';
 import 'login_utils.dart';
@@ -64,17 +65,18 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
       return Scaffold(
       appBar: AppBar(
-       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       body: Center(
+        child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: .start,
           children: [
-            SizedBox(height:50,),
-            const Text("Please input login details"),
-            SizedBox(height: 5,),
-            ToggleButtons( 
+            SizedBox(height: 30),
+            Text('WELCOME', style: Theme.of(context).textTheme.titleSmall),
+            Text('Start your journey', style: displayNumber(size: 40)),
+            SizedBox(height: 24),
+            ToggleButtons(
               direction: Axis.horizontal,
                onPressed: (int index) {
                   setState(() {
@@ -85,11 +87,12 @@ class _LoginPageState extends State<LoginPage> {
                   });
                   signUp = _selectedOption[1];
                 },
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                selectedBorderColor: Colors.deepPurpleAccent[700],
-                selectedColor: Colors.white,
-                fillColor: const Color.fromARGB(255, 169, 100, 181),
-                color: Colors.deepPurpleAccent[400],
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                borderColor: AppColors.outline,
+                selectedBorderColor: AppColors.accent,
+                selectedColor: AppColors.onAccent,
+                fillColor: AppColors.accent,
+                color: AppColors.muted,
                 constraints: const BoxConstraints(
                   minHeight: 40.0,
                   minWidth: 80.0,
@@ -108,7 +111,6 @@ class _LoginPageState extends State<LoginPage> {
                       labelText: 'Email',
                       hintText: 'Enter your email',
                       prefixIcon: Icon(Icons.email),
-                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -122,7 +124,6 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Username',
                   hintText: 'Enter your username',
                   prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
                 ),
                ),
               ),
@@ -136,7 +137,6 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Password',
                   hintText: 'Enter your password',
                   prefixIcon: Icon(Icons.key),
-                  border: OutlineInputBorder(),  
                 ),
                ),
               ),
@@ -196,11 +196,12 @@ class _LoginPageState extends State<LoginPage> {
                   });
                 },
               ),
-              ElevatedButton(onPressed: () async {
+              TextButton(onPressed: () async {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => DebugPage()));
               }, child: Text("Go to debug page")),
            ],
           ),
+         ),
         ),
       );
   }

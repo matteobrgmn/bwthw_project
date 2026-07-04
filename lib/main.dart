@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/sign_in_page.dart';
 import 'package:provider/provider.dart';
 import 'providers/data_provider.dart';
+import 'theme.dart';
 
 
 void main() {
@@ -64,13 +65,15 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     if (startPage == null) {
-      return const MaterialApp(
-        home: Scaffold(
+      return MaterialApp(
+        theme: buildAppTheme(),
+        home: const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
       );
     }
     return MaterialApp(
+      theme: buildAppTheme(),
       home: startPage!,
     );
   }
