@@ -5,6 +5,8 @@ import 'package:bwthw_project/widgets/calories_bar_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import 'package:bwthw_project/screens/meal_page.dart';
+import '../widgets/stat_tile.dart';
+
 
 class DataPage extends StatefulWidget {
   const DataPage({super.key, required this.username});
@@ -49,6 +51,38 @@ class _DataPageState extends State<DataPage> {
             weightChange: provider.weightChange,
           ),
           CaloriesBarChart(data: provider.caloriesBtwTwoDates),
+          Row(
+            children: [
+              SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
+                  icon: Icons.monitor_weight,
+                  label: 'Weight',
+                  value: '${provider.weight}',
+                  color: AppColors.accent,
+                ),
+                ),
+            SizedBox(width: 12),
+            Expanded(
+              child: StatTile(
+                  icon: Icons.height,
+                  label: 'Height',
+                  value: '${provider.height}',
+                  color: AppColors.fat,
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
+                    icon: Icons.person,
+                    label: 'Gender',
+                    value: '${provider.gender}',
+                    color: AppColors.fat,
+                  ),
+              ),
+              SizedBox(width: 12),
+            ],
+          ),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -145,6 +179,7 @@ class _WeightPredictionCard extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 36),
               const SizedBox(width: 10),
+            
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

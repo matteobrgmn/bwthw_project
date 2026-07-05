@@ -9,6 +9,7 @@ import '../widgets/steps_bar_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import '../theme.dart';
+import '../widgets/stat_tile.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -57,10 +58,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final impact = Impact();
   late DataProvider _dataProvider;
+  late IconData _randomIcon;
+
+  final List<IconData> _icons = [
+    Icons.face,
+    Icons.tag_faces,
+    Icons.sentiment_satisfied,
+    Icons.emoji_emotions
+    ];
 
   @override
   void initState() {
     super.initState();
+    // Pick random icon
+    _pickRandomIcon();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.needSignUp(context);
@@ -68,6 +79,11 @@ class _HomePageState extends State<HomePage> {
     Future.microtask(() {
       context.read<DataProvider>().start();
     });
+  }
+
+  void _pickRandomIcon() {
+    final random = DateTime.now().millisecondsSinceEpoch;
+    _randomIcon = _icons[random % _icons.length];
   }
 
   @override
@@ -141,9 +157,15 @@ class _HomePageState extends State<HomePage> {
                   'WELCOME BACK',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
-                Text(
-                  widget.username,
-                  style: displayNumber(size: 44),
+                Row(
+                  children: [
+                    Text(
+                      widget.username,
+                      style: displayNumber(size: 44),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(_randomIcon, size: 34, color: AppColors.accent),
+                  ],
                 ),
               ],
             ),
@@ -153,7 +175,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               Expanded(
-                child: _StatTile(
+                child: StatTile(
                   icon: Icons.directions_walk,
                   label: 'STEPS',
                   value: '${provider.stepsDay}',
@@ -162,7 +184,7 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _StatTile(
+                child: StatTile(
                   icon: Icons.local_fire_department,
                   label: 'KCAL BURNED',
                   value: '${provider.caloriesDay}',
@@ -233,38 +255,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: .spaceEvenly,
           children: [
             IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      alignment: Alignment.center,
-                      title: const Text(
-                        "Refresh page",
-                        style: TextStyle(fontSize: 26),
-                      ),
-                      content: const Text("Do you wish to refresh the page?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("No"),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            setState(() {
-                              //SETUP PAGE REFRESH IF NEEDED
-                            });
-                          },
-                          child: const Text("Yes"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
+              onPressed: () {},
               icon: const Icon(Icons.home_filled),
               color: AppColors.accent, //active tab
             ),
@@ -294,43 +285,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-//compact stat card with icon, big numeral and label
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 10),
-          Text(value, style: displayNumber(size: 34)),
-          const SizedBox(height: 2),
-          Text(label, style: Theme.of(context).textTheme.titleSmall),
-        ],
       ),
     );
   }

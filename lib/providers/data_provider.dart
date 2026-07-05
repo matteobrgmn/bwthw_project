@@ -14,6 +14,9 @@ class DataProvider extends ChangeNotifier {
   List<CalorieData> caloriesBtwTwoDates = [];
   int stepsDay = 0;
   int caloriesDay = 0;
+  String? weight;
+  String? height;
+  String? gender;
   int increaseStepPerc = 0;
   double totalConsumed = 0;
   double totalBurned = 0;
@@ -79,6 +82,30 @@ class DataProvider extends ChangeNotifier {
 
     netDeficit = totalBurned - totalConsumed;
     weightChange = netDeficit / _kcalPerKg;
+
+    final userInfo = sp.getStringList(username);
+    
+    if (userInfo != null) {
+      weight = userInfo[5];
+    }
+
+    if (userInfo != null) {
+      height = userInfo[4];
+    }
+
+    if (userInfo != null) {
+      gender = userInfo[7];
+      if (gender == 'M') {
+        gender = 'Male';
+      }
+      else if (gender == 'F') {
+        gender = 'Female';
+      }
+      else {
+        gender = 'Other';
+      }
+    }
+
 
     double stepsWeekChange = 0;
     double sumLastWeek = sumSteps(stepsLastWeekBtwTwoDates);

@@ -103,14 +103,15 @@ class _MealPageState extends State<MealPage> {
   //initialize page
   @override
   Widget build(BuildContext context) {
-    final appBar = AppBar(title: const Text('Meals'));
-
+    final appBar = AppBar(
+      automaticallyImplyLeading: false,
+      title: const Text('Meals')
+    );
     //if there's an error in initiation, then retry initiation
     if (_initError != null) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Weekly Data'),
-          automaticallyImplyLeading: false,
         ),
         body: Center(
           child: Column(
