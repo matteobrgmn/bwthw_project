@@ -1,15 +1,14 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'dart:math' as math;
-
 import 'package:bwthw_project/impact/impact.dart';
 import 'package:bwthw_project/nutrition/models/meal_entry.dart';
 import 'package:bwthw_project/state/meal_store.dart';
 import 'package:bwthw_project/theme.dart';
 import 'package:bwthw_project/widgets/calories_bar_chart.dart';
+import 'package:provider/provider.dart';
+import '../providers/data_provider.dart';
 
 class DataPage extends StatefulWidget {
   const DataPage({super.key, required this.username});
@@ -37,31 +36,33 @@ class _DataPageState extends State<DataPage> {
   void initState() {
     super.initState();
     _init();
+
+    Future.microtask(() {
+      context.read<DataProvider>().start();
+    });
   }
 
   Future<void> _init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final consumed = _readCaloriesFromPrefs(prefs);
-      final burned = await _fetchCaloriesBurned();
+      final burned = <String, double>{};
 
       double totalConsumed = 0;
       double totalBurned = 0;
       final chartData = <CalorieData>[];
 
-      const dayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+      const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       final now = DateTime.now();
-
       for (int i = 7; i >= 1; i--) {
         final date = now.subtract(Duration(days: i));
-        final dateStr = _fmtDate(date);
+        final dateStr = _fmtDate(date);   
         final label = dayLabels[date.weekday - 1];
         final dayConsumed = consumed[dateStr] ?? 0.0;
         totalConsumed += dayConsumed;
         totalBurned += burned[dateStr] ?? 0.0;
         chartData.add(CalorieData(label, dayConsumed));
       }
-
       if (mounted) {
         setState(() {
           _chartData = chartData;
@@ -108,26 +109,6 @@ class _DataPageState extends State<DataPage> {
     return result;
   }
 
-  //reading calorie data from 7 days ago to last day available (yesterday)
-  Future<Map<String, double>> _fetchCaloriesBurned() async {
-    try {
-      await _impact.authentication();
-
-      //sets starting and ending date for the interval
-      final now = DateTime.now();
-      final startDate = _fmtDate(now.subtract(const Duration(days: 7)));
-      final endDate = _fmtDate(now.subtract(const Duration(days: 1)));
-
-      final data = await _impact.getCaloriesBtwTwoDates(startDate, endDate);
-      if (data == null || data.isEmpty) return {};
-      return Map.fromEntries(
-        data.entries.map((e) => MapEntry(e.key, (e.value as num).toDouble())),
-      );
-    } catch (_) {
-      return {};
-    }
-  }
-
   String _fmtDate(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -137,6 +118,15 @@ class _DataPageState extends State<DataPage> {
   @override
   Widget build(BuildContext context) {
     final appBar = AppBar(title: const Text('Weekly Data'));
+    final provider = context.watch<DataProvider>();
+
+    if (provider.isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     //if page NOT initialized properly, then display error message and reattempt initializing
     if (_initError != null) {
@@ -172,7 +162,7 @@ class _DataPageState extends State<DataPage> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
+    print(provider.totalConsumed);
     //if mounted and initialized show the page to the user
     return Scaffold(
       appBar: appBar,
@@ -180,12 +170,12 @@ class _DataPageState extends State<DataPage> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           _WeightPredictionCard(
-            totalConsumed: _totalConsumed,
-            totalBurned: _totalBurned,
-            netDeficit: _netDeficit,
-            weightChange: _weightChange,
+            totalConsumed: provider.totalConsumed,
+            totalBurned: provider.totalBurned,
+            netDeficit: provider.netDeficit,
+            weightChange: provider.weightChange,
           ),
-          CaloriesBarChart(data: _chartData),
+          CaloriesBarChart(data: provider.caloriesBtwTwoDates),
         ],
       ),
       bottomNavigationBar: BottomAppBar(

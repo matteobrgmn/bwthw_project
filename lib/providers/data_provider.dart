@@ -1,20 +1,35 @@
+import 'package:bwthw_project/widgets/calories_bar_chart.dart';
 import 'package:flutter/material.dart';
 import '/impact/impact.dart';
 import '../widgets/steps_bar_chart.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bwthw_project/nutrition/models/meal_entry.dart';
+import 'package:bwthw_project/state/meal_store.dart';
+import 'dart:convert';
 
 class DataProvider extends ChangeNotifier {
   List<StepData> stepsBtwTwoDates = [];
   List<StepData> stepsLastWeekBtwTwoDates = [];
+  List<CalorieData> caloriesBtwTwoDates = [];
   int stepsDay = 0;
   int caloriesDay = 0;
   int increaseStepPerc = 0;
+  double totalConsumed = 0;
+  double totalBurned = 0;
+  double netDeficit = 0;
+  double weightChange = 0;
+  //constant for calculating the amount of (approximated) kilograms lost/gained based upon the calorie deficit/surplus
+  static const double _kcalPerKg = 7700;
 
   final Impact _impact = Impact();
   bool isLoading = false;
   Timer? _timer;
 
   Future<void> _loadData() async {
+    final sp = await SharedPreferences.getInstance();  
+    String? username = sp.getString("username");
+    final consumed = _readCaloriesFromPrefs(sp, username!);
     final today = DateTime.now();
 
     // Create data format for API CALL
@@ -40,6 +55,8 @@ class DataProvider extends ChangeNotifier {
     stepsBtwTwoDates = convertToChartData(_stepsBtwDates!);
     stepsLastWeekBtwTwoDates = convertToChartData(_stepsLastWeekBtwDates!);
 
+    caloriesBtwTwoDates = convertToCaloriesChartData(_caloriesBtwDates);
+  
     double sumSteps(List<StepData> data) {
       double sum = 0;
 
@@ -49,6 +66,20 @@ class DataProvider extends ChangeNotifier {
 
       return sum;
     }
+
+    totalConsumed = 0;
+    totalBurned = 0;
+    for (int i = 7; i >= 1; i--) { 
+      final date = today.subtract(Duration(days: 0)); // CHANGE 0 to i
+      final dateStr = _fmtDate(date);  
+      final dayConsumed = consumed[dateStr] ?? 0.0;
+      totalConsumed += dayConsumed;
+      print(caloriesBtwTwoDates);
+      totalBurned += caloriesBtwTwoDates[i-1].value;
+    }
+
+    netDeficit = totalBurned - totalConsumed;
+    weightChange = netDeficit / _kcalPerKg;
 
     double stepsWeekChange = 0;
     double sumLastWeek = sumSteps(stepsLastWeekBtwTwoDates);
@@ -66,7 +97,7 @@ class DataProvider extends ChangeNotifier {
   Future<void> start() async {
     isLoading = true;
     notifyListeners();
-
+    
     await _impact.authentication();
     await _loadData();  
 
@@ -90,3 +121,68 @@ class DataProvider extends ChangeNotifier {
   }
   
 }
+
+List<CalorieData> convertToCaloriesChartData(Map<String, dynamic>? data) {
+  if (data == null || data.isEmpty) {
+    return [];
+  }
+
+  final entries = data.entries.toList()
+    ..sort((a, b) => a.key.compareTo(b.key));
+
+  return entries.map((e) {
+    DateTime? date;
+
+    try {
+      date = DateTime.parse(e.key);
+    } catch (_) {
+      return null; // skip invalid date
+    }
+
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    final label = days[date.weekday - 1];
+
+    final value = (e.value is num)
+        ? (e.value as num).toDouble()
+        : double.tryParse(e.value.toString()) ?? 0.0;
+
+    return CalorieData(label, value);
+  }).whereType<CalorieData>().toList();
+}
+
+
+//read calories consumed during week from sharedPreferences
+  Map<String, double> _readCaloriesFromPrefs(SharedPreferences prefs, String username) {
+    final result = <String, double>{};
+    final now = DateTime.now();
+
+    //cycle through days and extract calories from each meal slot in those days
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateStr = _fmtDate(date);
+      double dayTotal = 0.0;
+      for (final slot in MealSlot.values) {
+        final key = 'meals:$username:$dateStr:${slot.name}';
+        final raw = prefs.getString(key);
+
+        if (raw != null) {
+          try {
+            final list = jsonDecode(raw) as List<dynamic>;
+            final entries = list
+                .map((e) => MealEntry.fromJson(e as Map<String, dynamic>))
+                .toList();
+            dayTotal += entries
+                .where((e) => e.hasNutritionData)
+                .fold(0.0, (sum, e) => sum + e.scaledCalories);
+          } catch (_) {
+            // skip slot, treat as 0
+          }
+        }
+      }
+      result[dateStr] = dayTotal;
+    }
+    return result;
+  }
+  
+  String _fmtDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
