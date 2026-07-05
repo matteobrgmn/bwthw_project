@@ -74,7 +74,6 @@ class DataProvider extends ChangeNotifier {
       final dateStr = _fmtDate(date);  
       final dayConsumed = consumed[dateStr] ?? 0.0;
       totalConsumed += dayConsumed;
-      print(caloriesBtwTwoDates);
       totalBurned += caloriesBtwTwoDates[i-1].value;
     }
 

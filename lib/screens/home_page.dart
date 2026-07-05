@@ -271,53 +271,24 @@ class _HomePageState extends State<HomePage> {
 
             IconButton(
               onPressed: () async {
-                String? nav = "data";
-                do {
-                  if (nav == "data") {
-                    nav = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            DataPage(username: widget.username),
-                      ),
-                    );
-                  } else if (nav == "meal") {
-                    nav = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MealPage(username: widget.username),
-                      ),
-                    );
-                  }
-                } while (nav != null && nav != "home");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DataPage(username: widget.username),
+                  ),
+                );
               },
               icon: const Icon(Icons.bar_chart),
             ),
 
             //transfer context to meal page
             IconButton(
-              onPressed: () async {
-                String? nav = "meal";
-                do {
-                  if (nav == "meal") {
-                    nav = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MealPage(username: widget.username),
-                      ),
-                    );
-                  } else if (nav == "data") {
-                    nav = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            DataPage(username: widget.username),
-                      ),
-                    );
-                  }
-                } while (nav != null && nav != "home");
+              onPressed: () async {Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MealPage(username: widget.username),
+                ),
+              );
               },
               icon: const Icon(Icons.menu_book),
             ),

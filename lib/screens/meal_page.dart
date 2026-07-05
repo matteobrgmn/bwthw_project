@@ -108,7 +108,10 @@ class _MealPageState extends State<MealPage> {
     //if there's an error in initiation, then retry initiation
     if (_initError != null) {
       return Scaffold(
-        appBar: appBar,
+        appBar: AppBar(
+          title: const Text('Weekly Data'),
+          automaticallyImplyLeading: false,
+        ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

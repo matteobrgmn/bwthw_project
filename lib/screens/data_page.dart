@@ -1,14 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' as math;
-import 'package:bwthw_project/impact/impact.dart';
-import 'package:bwthw_project/nutrition/models/meal_entry.dart';
-import 'package:bwthw_project/state/meal_store.dart';
 import 'package:bwthw_project/theme.dart';
 import 'package:bwthw_project/widgets/calories_bar_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
+import 'package:bwthw_project/screens/meal_page.dart';
 
 class DataPage extends StatefulWidget {
   const DataPage({super.key, required this.username});
@@ -20,104 +16,13 @@ class DataPage extends StatefulWidget {
 }
 
 class _DataPageState extends State<DataPage> {
-  bool _initialized = false;
-  String? _initError;
-
-  List<CalorieData> _chartData = [];
-  double _totalConsumed = 0;
-  double _totalBurned = 0;
-
-  final _impact = Impact();
-
-  //constant for calculating the amount of (approximated) kilograms lost/gained based upon the calorie deficit/surplus
-  static const double _kcalPerKg = 7700;
-
   @override
   void initState() {
     super.initState();
-    _init();
-
-    Future.microtask(() {
-      context.read<DataProvider>().start();
-    });
   }
-
-  Future<void> _init() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final consumed = _readCaloriesFromPrefs(prefs);
-      final burned = <String, double>{};
-
-      double totalConsumed = 0;
-      double totalBurned = 0;
-      final chartData = <CalorieData>[];
-
-      const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-      final now = DateTime.now();
-      for (int i = 7; i >= 1; i--) {
-        final date = now.subtract(Duration(days: i));
-        final dateStr = _fmtDate(date);   
-        final label = dayLabels[date.weekday - 1];
-        final dayConsumed = consumed[dateStr] ?? 0.0;
-        totalConsumed += dayConsumed;
-        totalBurned += burned[dateStr] ?? 0.0;
-        chartData.add(CalorieData(label, dayConsumed));
-      }
-      if (mounted) {
-        setState(() {
-          _chartData = chartData;
-          _totalConsumed = totalConsumed;
-          _totalBurned = totalBurned;
-          _initialized = true;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _initError = e.toString());
-    }
-  }
-
-  //read calories consumed during week from sharedPreferences
-  Map<String, double> _readCaloriesFromPrefs(SharedPreferences prefs) {
-    final result = <String, double>{};
-    final now = DateTime.now();
-
-    //cycle through days and extract calories from each meal slot in those days
-    for (int i = 6; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final dateStr = _fmtDate(date);
-      double dayTotal = 0.0;
-      for (final slot in MealSlot.values) {
-        final key = 'meals:${widget.username}:$dateStr:${slot.name}';
-        final raw = prefs.getString(key);
-
-        if (raw != null) {
-          try {
-            final list = jsonDecode(raw) as List<dynamic>;
-            final entries = list
-                .map((e) => MealEntry.fromJson(e as Map<String, dynamic>))
-                .toList();
-            dayTotal += entries
-                .where((e) => e.hasNutritionData)
-                .fold(0.0, (sum, e) => sum + e.scaledCalories);
-          } catch (_) {
-            // skip slot, treat as 0
-          }
-        }
-      }
-      result[dateStr] = dayTotal;
-    }
-    return result;
-  }
-
-  String _fmtDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-  double get _netDeficit => _totalBurned - _totalConsumed;
-  double get _weightChange => _netDeficit / _kcalPerKg;
 
   @override
   Widget build(BuildContext context) {
-    final appBar = AppBar(title: const Text('Weekly Data'));
     final provider = context.watch<DataProvider>();
 
     if (provider.isLoading) {
@@ -128,44 +33,12 @@ class _DataPageState extends State<DataPage> {
       );
     }
 
-    //if page NOT initialized properly, then display error message and reattempt initializing
-    if (_initError != null) {
-      return Scaffold(
-        appBar: appBar,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 8),
-              const Text('Could not load data.'),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _initError = null;
-                    _initialized = false;
-                  });
-                  _init();
-                },
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    //if not initialized, show loading
-    if (!_initialized) {
-      return Scaffold(
-        appBar: appBar,
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-    print(provider.totalConsumed);
     //if mounted and initialized show the page to the user
     return Scaffold(
-      appBar: appBar,
+      appBar: AppBar(
+        title: const Text('Weekly Data'),
+        automaticallyImplyLeading: false,
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -191,9 +64,16 @@ class _DataPageState extends State<DataPage> {
               color: AppColors.accent, //active tab
               onPressed: () {},
             ),
+            //transfer context to meal page
             IconButton(
+              onPressed: () async {Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MealPage(username: widget.username),
+                ),
+              );
+              },
               icon: const Icon(Icons.menu_book),
-              onPressed: () => Navigator.pop(context, "meal"),
             ),
           ],
         ),
