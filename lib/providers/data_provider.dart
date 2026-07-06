@@ -73,7 +73,7 @@ class DataProvider extends ChangeNotifier {
     totalConsumed = 0;
     totalBurned = 0;
     for (int i = 7; i >= 1; i--) { 
-      final date = today.subtract(Duration(days: 0)); // CHANGE 0 to i
+      final date = today.subtract(Duration(days: i)); // CHANGE 0 to i
       final dateStr = _fmtDate(date);  
       final dayConsumed = consumed[dateStr] ?? 0.0;
       totalConsumed += dayConsumed;
@@ -120,32 +120,47 @@ class DataProvider extends ChangeNotifier {
     
   }
 
+  /* Function to start provider */
   Future<void> start() async {
+    /* Loading */
     isLoading = true;
-    notifyListeners();
+    notifyListeners();   
+    /* String containing the result of authentication (successful or failed) */ 
+    String result = await _impact.authentication();
+
+    /* Authentication succesful then load data */
+    if (result == 'successful'){
+      await _loadData();
+      isLoading = false;
+      notifyListeners();
+    }
     
-    await _impact.authentication();
-    await _loadData();  
-
-    isLoading = false;
-    notifyListeners();
-
-    _timer?.cancel();
-
+    /* Periodic timer (each 10 seconds) execute the code inside. It tries to load the data or authenticate if the authentication failed */
     _timer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) async {
-        await _loadData();
-        notifyListeners();
-      },
-    );
+        const Duration(seconds: 10),
+        (_) async {
+          /* Authentication succesfful then load the data otherwise try authentication until it connect to IMPACT */
+          if (result == 'successful') {
+            try {
+              await _loadData();
+              isLoading = false;
+              notifyListeners();
+            }
+            catch(e) {
+              isLoading = true;
+              notifyListeners();
+            }
+          } else {
+            result = await _impact.authentication();
+          }
+        },
+    );    
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
   }
-  
 }
 
 List<CalorieData> convertToCaloriesChartData(Map<String, dynamic>? data) {

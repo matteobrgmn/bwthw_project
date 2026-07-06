@@ -40,23 +40,30 @@ class Impact{
 
   /* Authentication */
   Future<String> authentication () async {
-    final responseAuthenticate = await http.post(_formattedTokenUrl, 
+    try {
+      final responseAuthenticate = await http.post(
+        _formattedTokenUrl,
         headers: {
-                    'Content-Type': 'application/json',
-                  },     
-       body: jsonEncode({ 
-                          'username' : _username,
-                          'password' : _password
-                      }));
-    if (responseAuthenticate.statusCode == 200) {
-      final data = jsonDecode(responseAuthenticate.body);
-      _token = data['access'];
-      _refresh = data['refresh'];
-      return 'successfull';
-    } else {
-      return 'failed';
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'username': _username,
+          'password': _password,
+        }),
+    );
+      if (responseAuthenticate.statusCode == 200) {
+        final data = jsonDecode(responseAuthenticate.body);
+        _token = data['access'];
+        _refresh = data['refresh'];
+        return 'successful';
     }
+    print('here');
+    return 'failed';
+  } catch (e) {
+    print(e);
+    return 'failed';
   }
+}
 
   /* Refresh */
   Future<String> refresh () async {
@@ -80,6 +87,11 @@ class Impact{
 
   /* Return steps for a single day given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 */
   Future<int> getStepsSingleDay(String day) async {
+    if (_token == 'empty') {
+      return -1;
+    } 
+    else {
+    
     var numberOfSteps = 0;
     if (JwtDecoder.isExpired(_token)){
       await refresh();
@@ -107,15 +119,22 @@ class Impact{
       // print(response.body);
       return -1;
     }
+    }
   }
 
   /* Return calories for a single day given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 */
   Future<int> getCaloriesSingleDay(String day) async {
     double numberOfCalories = 0;
+
+    if (_token == 'empty') {
+      return -1;
+    } 
+    else {
+    
     if (JwtDecoder.isExpired(_token)){
       await refresh();
       // print('expired'); // Debug
-    };
+    }
     
     final response = await http.get(
       Uri.parse(_baseUrl + _caloriesSingleDayUrl + day),
@@ -137,6 +156,7 @@ class Impact{
       // print(response.body);
       return -1;
     }
+    }
   }
 
   /* Return steps for each day between a start and end date given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 
@@ -157,45 +177,50 @@ class Impact{
       return null; //checks wether or not the startDate is larger than the endDate or the difference is larger than a week, in case it is, return null to be treated as an exception in main page
     }
     */
-    if (JwtDecoder.isExpired(_token)){
-      await refresh();
-      // print('expired'); // Debug
-    };
-    
-    final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
-    final response = await http.get(
-      urlParsed,
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
-    );
-
-    // print(response.statusCode);
-    // print(response.body);
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
-      List<dynamic> items = responseDecodedBody['data'];
-      Map<String, int> _stepsPerDay = {};
-      for (var item in items) {
-          String date = item['date'];
-          // print('Data: $date'); // Debug 
-          List<dynamic> measurements = item['data'];
-          var _steps = 0;
-          for (var m in measurements) {
-            var value = int.parse(m['value']);
-            _steps += value;
-          }
-          _stepsPerDay[date] = _steps;
-    }
-      // print(_stepsPerDay); // Debug  
-      // print(responseDecodedBody); // Debug
-      // print(numberOfSteps); // Debug
-      return _stepsPerDay;
-      } else {
-     // print(-1); // Debug
-     // print(response.statusCode); // Debug
-     // print(response.body); // Debug
+    if (_token == 'empty') {
       return {};
+    } 
+    else {
+      if (JwtDecoder.isExpired(_token)){
+        await refresh();
+        // print('expired'); // Debug
+      };
+      
+      final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+      final response = await http.get(
+        urlParsed,
+        headers: {
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
+      // print(response.statusCode);
+      // print(response.body);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
+        List<dynamic> items = responseDecodedBody['data'];
+        Map<String, int> _stepsPerDay = {};
+        for (var item in items) {
+            String date = item['date'];
+            // print('Data: $date'); // Debug 
+            List<dynamic> measurements = item['data'];
+            var _steps = 0;
+            for (var m in measurements) {
+              var value = int.parse(m['value']);
+              _steps += value;
+            }
+            _stepsPerDay[date] = _steps;
+      }
+        // print(_stepsPerDay); // Debug  
+        // print(responseDecodedBody); // Debug
+        // print(numberOfSteps); // Debug
+        return _stepsPerDay;
+        } else {
+      // print(-1); // Debug
+      // print(response.statusCode); // Debug
+      // print(response.body); // Debug
+        return {};
+      }
     }
   }
 
@@ -206,7 +231,10 @@ class Impact{
    * - stardDate must be lower than endDate
    */
   Future<Map<String, dynamic>?> getCaloriesBtwTwoDates(String startDate, String endDate) async {
-    
+    if (_token == 'empty') {
+      return {};
+    } 
+    else {
     if (JwtDecoder.isExpired(_token)){
       await refresh();
       // print('expired'); // Debug
@@ -246,6 +274,7 @@ class Impact{
      // print(response.body); // Debug
       return {};
     }
+  }
   }
 
   /* Printer */

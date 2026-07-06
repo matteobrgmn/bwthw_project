@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DataProvider>();
-    
+
     if (provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
