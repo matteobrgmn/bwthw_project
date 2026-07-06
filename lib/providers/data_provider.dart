@@ -41,7 +41,7 @@ class DataProvider extends ChangeNotifier {
     final prevWeekEnd = today.subtract(const Duration(days: 7));
     final prevWeekStart = today.subtract(const Duration(days: 14));
 
-    final todayString = "${today.year.toString().padLeft(4, '0')}-" "${today.month.toString().padLeft(2, '0')}-" "${today.day.toString().padLeft(2, '0')}";
+    // final todayString = "${today.year.toString().padLeft(4, '0')}-" "${today.month.toString().padLeft(2, '0')}-" "${today.day.toString().padLeft(2, '0')}";
     final yesterdayString = "${yesterday.year.toString().padLeft(4, '0')}-" "${yesterday.month.toString().padLeft(2, '0')}-" "${yesterday.day.toString().padLeft(2, '0')}";
     final sevenDaysAgoString = "${sevenDaysAgo.year.toString().padLeft(4, '0')}-" "${sevenDaysAgo.month.toString().padLeft(2, '0')}-" "${sevenDaysAgo.day.toString().padLeft(2, '0')}";
 

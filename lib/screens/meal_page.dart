@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:bwthw_project/nutrition/models/food_search_hit.dart';
 import 'package:bwthw_project/nutrition/models/meal_entry.dart';
 import 'package:bwthw_project/nutrition/nutrition_exceptions.dart';
@@ -12,6 +10,7 @@ import 'package:bwthw_project/state/meal_store.dart';
 import 'package:bwthw_project/widgets/food_typeahead_field.dart';
 import 'package:bwthw_project/widgets/macros_chips.dart';
 import 'package:bwthw_project/widgets/totals_card.dart';
+import '../providers/data_provider.dart';
 
 extension _StringExt on String {
   String capitalize() =>
@@ -107,12 +106,18 @@ class _MealPageState extends State<MealPage> {
       automaticallyImplyLeading: false,
       title: const Text('Meals')
     );
+    final provider = context.watch<DataProvider>();
+
+    if (provider.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
     //if there's an error in initiation, then retry initiation
     if (_initError != null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Weekly Data'),
-        ),
+        appBar: appBar,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
