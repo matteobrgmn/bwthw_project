@@ -40,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   bool rememberUserData = false;
+  bool acceptTermsAndConditions = false;
   bool signUp = false;
 
   void _showAlertDialog(String message) async {
@@ -141,6 +142,41 @@ class _LoginPageState extends State<LoginPage> {
                ),
               ),
               SizedBox(height: 10,),
+
+              if (_selectedOption[1]) ...[
+                const SizedBox(height: 10),
+                CheckboxListTile(
+                  title: InkWell(
+                    onTap: () {
+                        _showAlertDialog("This application is intended for demonstration purposes only. Data stored on the device are not encrypted and should not be considered secure. Do not use real or sensitive personal information.");
+                    },
+                    child: const Text(
+                      "Accept terms and conditions",
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  value: acceptTermsAndConditions,
+                  onChanged: (value) {
+                    setState(() {
+                      acceptTermsAndConditions = value ?? false;
+                    });
+                  },
+                ),
+              ],
+
+              CheckboxListTile(
+                title: const Text("Remember me"),
+                value: rememberUserData,
+                onChanged: (value) {
+                  setState(() {
+                    rememberUserData = value ?? false;
+                  });
+                },
+              ),
+              
               ElevatedButton(onPressed: () async {
                 String username = userController.text;
                 String password = hashPassword(passController.text);
@@ -171,31 +207,28 @@ class _LoginPageState extends State<LoginPage> {
                   passController.clear();
                 } else {
                   String email = emailController.text;
-                  // Sign up
-                  SignupResult signupResult = await enterSignupData(email, username, password);
-                  //print(signupResult.message); // Debug
-
-                  if (signupResult.success) {
-                    // Signup success
-                    rememberData(rememberUserData, username);
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage(title: '',username: username,)));
-                  }
                   // Signup failed
-                  _showAlertDialog(signupResult.message);
+                  if (!acceptTermsAndConditions) {
+                    _showAlertDialog('Please read and accept our terms and conditions.');
+                  }
+                  else {
+                    // Sign up
+                    SignupResult signupResult = await enterSignupData(email, username, password);
+                    
+                    if (signupResult.success) {
+                      // Signup success
+                      rememberData(rememberUserData, username);
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage(title: '', username: username,)));
+                    } else {
+                      _showAlertDialog(signupResult.message);
+                    }
+                  }
                   // Clear password if it's duplicated
                   passController.clear();
                 }
 
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),    
-              CheckboxListTile(
-                title: const Text("Remember me"),
-                value: rememberUserData,
-                onChanged: (value) {
-                  setState(() {
-                    rememberUserData = value ?? false;
-                  });
-                },
-              ),
+              
               TextButton(onPressed: () async {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => DebugPage()));
               }, child: Text("Go to debug page")),

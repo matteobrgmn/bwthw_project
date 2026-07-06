@@ -45,7 +45,7 @@ class CaloriesBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'WEEKLY CALORIES',
+            'WEEKLY CALORIES BURNED',
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 16),

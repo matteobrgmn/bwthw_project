@@ -84,16 +84,9 @@ class DataProvider extends ChangeNotifier {
     weightChange = netDeficit / _kcalPerKg;
 
     final userInfo = sp.getStringList(username);
-    
-    if (userInfo != null) {
+    if (userInfo != null && userInfo.length > 6) {
       weight = userInfo[5];
-    }
-
-    if (userInfo != null) {
       height = userInfo[4];
-    }
-
-    if (userInfo != null) {
       gender = userInfo[7];
       if (gender == 'M') {
         gender = 'Male';
@@ -105,7 +98,6 @@ class DataProvider extends ChangeNotifier {
         gender = 'Other';
       }
     }
-
 
     double stepsWeekChange = 0;
     double sumLastWeek = sumSteps(stepsLastWeekBtwTwoDates);
@@ -122,6 +114,7 @@ class DataProvider extends ChangeNotifier {
 
   /* Function to start provider */
   Future<void> start() async {
+
     /* Loading */
     isLoading = true;
     notifyListeners();   
@@ -139,6 +132,7 @@ class DataProvider extends ChangeNotifier {
     _timer = Timer.periodic(
         const Duration(seconds: 10),
         (_) async {
+          print('refresh');
           /* Authentication succesfful then load the data otherwise try authentication until it connect to IMPACT */
           if (result == 'successful') {
             try {

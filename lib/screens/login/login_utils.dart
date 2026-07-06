@@ -23,6 +23,7 @@ Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async 
   
   final sp = await SharedPreferences.getInstance();
   final userList = sp.getStringList(inUsername);
+  await sp.setString("username", inUsername);
 
   if (userList == null) {
     return LoginResult(false, "Username not found!");
@@ -66,6 +67,7 @@ Future<SignupResult> enterSignupData(String inEmail, String inUsername, String i
     ];
 
     await sp.setStringList(inUsername, userList); // Create new username
+    await sp.setString("username", inUsername);
     return SignupResult(true, 'Registration completed. Welcome to NutriTrack!');
   }
   
@@ -78,7 +80,7 @@ Future<SignupResult> enterSignupData(String inEmail, String inUsername, String i
 void rememberData (bool remember, String username) async {
   final sp = await SharedPreferences.getInstance();
     await sp.setBool('rememberLogin', remember);
-    await sp.setString("username", remember?username:"");
+    await sp.setString("username", username);
 }
 
 /* Function to get remember login data (for debug) 

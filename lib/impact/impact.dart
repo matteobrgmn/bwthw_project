@@ -57,10 +57,8 @@ class Impact{
         _refresh = data['refresh'];
         return 'successful';
     }
-    print('here');
     return 'failed';
   } catch (e) {
-    print(e);
     return 'failed';
   }
 }
