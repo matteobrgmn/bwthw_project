@@ -15,12 +15,15 @@ class LoginResult {
  *  - User must be in the sharedpreferences
  *  - Password must corresponds with the password saved in the sharepreferences
  */
-Future<LoginResult> verifyLoginData(String inUsername, String inPassword) async {
+Future<LoginResult> verifyLoginData(
+  String inUsername,
+  String inPassword,
+) async {
   // Verify empty field
   if (inUsername.isEmpty || inPassword.isEmpty) {
     return LoginResult(false, "Complete all the field please!");
   }
-  
+
   final sp = await SharedPreferences.getInstance();
   final userList = sp.getStringList(inUsername);
   await sp.setString("username", inUsername);
@@ -44,43 +47,44 @@ class SignupResult {
   SignupResult(this.success, this.message);
 }
 
-
 /* Function to verify the signup data according to the following criteria:
  *  - All the field must be completed.
  *  - Username must be not used.
  */
-Future<SignupResult> enterSignupData(String inEmail, String inUsername, String inPassword) async {
-  if (inEmail.isEmpty || inUsername.isEmpty || inPassword.isEmpty) {
+Future<SignupResult> enterSignupData(
+  String inEmail,
+  String inUsername,
+  String inPassword,
+) async {
+  if (inEmail.isEmpty ||
+      inUsername.isEmpty ||
+      (inPassword.isEmpty ||
+          inPassword.trim() ==
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")) {
     return SignupResult(false, "Complete all the field please!");
   }
-  
+
   final sp = await SharedPreferences.getInstance();
   final verifyUserAlreadyExist = sp.getStringList(inUsername);
 
   if (verifyUserAlreadyExist == null) {
     // Create new user
-    List<String> userList = [
-      inEmail,
-      inUsername,
-      inPassword,
-      "true"
-    ];
+    List<String> userList = [inEmail, inUsername, inPassword, "true"];
 
     await sp.setStringList(inUsername, userList); // Create new username
     await sp.setString("username", inUsername);
     return SignupResult(true, 'Registration completed. Welcome to NutriTrack!');
   }
-  
+
   // Duplicated
   return SignupResult(false, 'Username already used!');
-
 }
 
 /* Function to remember login data */
-void rememberData (bool remember, String username) async {
+void rememberData(bool remember, String username) async {
   final sp = await SharedPreferences.getInstance();
-    await sp.setBool('rememberLogin', remember);
-    await sp.setString("username", username);
+  await sp.setBool('rememberLogin', remember);
+  await sp.setString("username", username);
 }
 
 /* Function to get remember login data (for debug) 
@@ -90,7 +94,7 @@ void getRememberData () async {
   //print('Remember value is $rememberValue'); // Debug
 }*/
 
-Future<bool> verifyUserBiometricsSaved(String inUser) async{
+Future<bool> verifyUserBiometricsSaved(String inUser) async {
   final sp = await SharedPreferences.getInstance();
   final user = sp.getStringList(inUser);
   return (user![3] == "false");
@@ -99,5 +103,5 @@ Future<bool> verifyUserBiometricsSaved(String inUser) async{
 String hashPassword(String password) {
   final bytes = utf8.encode(password);
   final digest = sha256.convert(bytes);
-  return digest.toString(); 
+  return digest.toString();
 }
