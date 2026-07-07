@@ -108,18 +108,22 @@ class DataProvider extends ChangeNotifier {
     weightChange = netDeficit / _kcalPerKg;
 
     final userInfo = sp.getStringList(username);
-    if (userInfo != null && userInfo.length > 6) {
-      weight = userInfo[5];
-      height = userInfo[4];
-      gender = userInfo[7];
-      bmi = userInfo[8];
-      if (gender == 'M') {
-        gender = 'M';
-      } else if (gender == 'F') {
-        gender = 'F';
-      } else {
-        gender = 'Other';
+    try{
+      if (userInfo != null && userInfo.length > 6) {
+        weight = userInfo[5];
+        height = userInfo[4];
+        gender = userInfo[7];
+        bmi = userInfo[8];
+        if (gender == 'M') {
+          gender = 'M';
+        } else if (gender == 'F') {
+          gender = 'F';
+        } else {
+          gender = 'Other';
+        }
       }
+    } catch(e) {
+      print(e);
     }
 
     double stepsWeekChange = 0;

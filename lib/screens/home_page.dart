@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 12),
           // Step perc from last week
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 50),
             child: Row(
               children: [
                 Container(
@@ -239,8 +239,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(width: 10),
                 Text(
-                  "from last week",
-                  style: TextStyle(fontSize: 15, color: AppColors.muted),
+                  "steps from last week",
+                  style: TextStyle(fontSize: 20, color: AppColors.muted),
                 ),
               ],
             ),

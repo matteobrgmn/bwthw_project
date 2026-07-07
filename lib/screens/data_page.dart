@@ -86,13 +86,22 @@ class _DataPageState extends State<DataPage> {
             children: [
               SizedBox(width: 12),
               Expanded(
-                child: StatTile(
-                  icon: Icons.trending_up,
-                  label: 'BMI',
-                  value: '${provider.bmi}',
-                  color: AppColors.fat,
+                    child: StatTile(
+                      icon: Icons.trending_up,
+                      label: 'BMI', 
+                      value: (double.tryParse(provider.bmi ?? '') ?? 0).toStringAsFixed(2), // Parse 2 decimal
+                      color: AppColors.fat,
+                    ),
                 ),
-              ),
+              SizedBox(width: 12),
+              Expanded(
+                    child: StatTile(
+                      icon: Icons.trending_up,
+                      label: 'BMI', 
+                      value: _findStatus(double.parse(provider.bmi!)), // Parse 2 decimal
+                      color: AppColors.fat,
+                    ),
+                ),
               SizedBox(width: 12),
             ],
           ),
@@ -100,6 +109,7 @@ class _DataPageState extends State<DataPage> {
           Row(
             mainAxisAlignment: .center,
             children: [
+              SizedBox(width: 12),
               ElevatedButton(
                 onPressed: () {
                   TextEditingController tc = TextEditingController();
@@ -163,6 +173,7 @@ class _DataPageState extends State<DataPage> {
                 },
                 child: Text("Report weight change"),
               ),
+              SizedBox(width: 12),
             ],
           ),
         ],
@@ -392,5 +403,21 @@ class _InfoRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+String _findStatus(double bmi) {
+  try {
+    if (bmi < 18.5) {
+      return 'Underweight';
+    } else if (bmi < 25) {
+      return 'Normal';
+    } else if (bmi < 30) {
+      return 'Overweight';
+    } else {
+      return 'Obesity';
+    }
+  } catch(e) {
+    return 'null';
   }
 }

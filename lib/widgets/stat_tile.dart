@@ -25,7 +25,7 @@ class StatTile extends StatelessWidget {
         border: Border.all(color: AppColors.outline),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 10),
