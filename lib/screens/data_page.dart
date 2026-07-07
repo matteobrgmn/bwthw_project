@@ -96,8 +96,8 @@ class _DataPageState extends State<DataPage> {
               SizedBox(width: 12),
               Expanded(
                     child: StatTile(
-                      icon: Icons.trending_up,
-                      label: 'BMI', 
+                      icon: Icons.monitor_heart_outlined,
+                      label: 'BMI status', 
                       value: _findStatus(double.parse(provider.bmi!)), // Parse 2 decimal
                       color: AppColors.fat,
                     ),

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import '../theme.dart';
 import '../widgets/stat_tile.dart';
+import '../widgets/steps_goal_bar.dart';
 
 /*void main() {
   // DEBUGGING SEGMENT
@@ -192,6 +193,12 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ],
+          ),
+          SizedBox(height: 12),
+          /* Steps goal bar */
+          StepsGoalBar(
+            currentSteps: provider.stepsDay,
+            goalSteps: 10000,
           ),
           SizedBox(height: 12),
           StepsBarChart(data: provider.stepsBtwTwoDates),
