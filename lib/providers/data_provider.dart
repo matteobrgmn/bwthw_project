@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bwthw_project/widgets/calories_bar_chart.dart';
 import 'package:flutter/material.dart';
 import '/impact/impact.dart';
@@ -17,6 +19,7 @@ class DataProvider extends ChangeNotifier {
   String? weight;
   String? height;
   String? gender;
+  String? bmi;
   int increaseStepPerc = 0;
   double totalConsumed = 0;
   double totalBurned = 0;
@@ -30,7 +33,7 @@ class DataProvider extends ChangeNotifier {
   Timer? _timer;
 
   Future<void> _loadData() async {
-    final sp = await SharedPreferences.getInstance();  
+    final sp = await SharedPreferences.getInstance();
     String? username = sp.getString("username");
     final consumed = _readCaloriesFromPrefs(sp, username!);
     final today = DateTime.now();
@@ -42,24 +45,45 @@ class DataProvider extends ChangeNotifier {
     final prevWeekStart = today.subtract(const Duration(days: 14));
 
     // final todayString = "${today.year.toString().padLeft(4, '0')}-" "${today.month.toString().padLeft(2, '0')}-" "${today.day.toString().padLeft(2, '0')}";
-    final yesterdayString = "${yesterday.year.toString().padLeft(4, '0')}-" "${yesterday.month.toString().padLeft(2, '0')}-" "${yesterday.day.toString().padLeft(2, '0')}";
-    final sevenDaysAgoString = "${sevenDaysAgo.year.toString().padLeft(4, '0')}-" "${sevenDaysAgo.month.toString().padLeft(2, '0')}-" "${sevenDaysAgo.day.toString().padLeft(2, '0')}";
+    final yesterdayString =
+        "${yesterday.year.toString().padLeft(4, '0')}-"
+        "${yesterday.month.toString().padLeft(2, '0')}-"
+        "${yesterday.day.toString().padLeft(2, '0')}";
+    final sevenDaysAgoString =
+        "${sevenDaysAgo.year.toString().padLeft(4, '0')}-"
+        "${sevenDaysAgo.month.toString().padLeft(2, '0')}-"
+        "${sevenDaysAgo.day.toString().padLeft(2, '0')}";
 
-    final prevWeekEndString = "${prevWeekEnd.year.toString().padLeft(4, '0')}-" "${prevWeekEnd.month.toString().padLeft(2, '0')}-" "${prevWeekEnd.day.toString().padLeft(2, '0')}";
-    final prevWeekStartString = "${prevWeekStart.year.toString().padLeft(4, '0')}-" "${prevWeekStart.month.toString().padLeft(2, '0')}-" "${prevWeekStart.day.toString().padLeft(2, '0')}";
+    final prevWeekEndString =
+        "${prevWeekEnd.year.toString().padLeft(4, '0')}-"
+        "${prevWeekEnd.month.toString().padLeft(2, '0')}-"
+        "${prevWeekEnd.day.toString().padLeft(2, '0')}";
+    final prevWeekStartString =
+        "${prevWeekStart.year.toString().padLeft(4, '0')}-"
+        "${prevWeekStart.month.toString().padLeft(2, '0')}-"
+        "${prevWeekStart.day.toString().padLeft(2, '0')}";
 
-    final _stepsBtwDates = await _impact.getStepsBtwTwoDates(sevenDaysAgoString, yesterdayString);
-    final _caloriesBtwDates = await _impact.getCaloriesBtwTwoDates(sevenDaysAgoString, yesterdayString);
-    final _stepsLastWeekBtwDates = await _impact.getStepsBtwTwoDates(prevWeekStartString, prevWeekEndString);
+    final _stepsBtwDates = await _impact.getStepsBtwTwoDates(
+      sevenDaysAgoString,
+      yesterdayString,
+    );
+    final _caloriesBtwDates = await _impact.getCaloriesBtwTwoDates(
+      sevenDaysAgoString,
+      yesterdayString,
+    );
+    final _stepsLastWeekBtwDates = await _impact.getStepsBtwTwoDates(
+      prevWeekStartString,
+      prevWeekEndString,
+    );
 
     stepsDay = await _impact.getStepsSingleDay(yesterdayString);
-    caloriesDay =  await _impact.getCaloriesSingleDay(yesterdayString);
+    caloriesDay = await _impact.getCaloriesSingleDay(yesterdayString);
 
     stepsBtwTwoDates = convertToChartData(_stepsBtwDates!);
     stepsLastWeekBtwTwoDates = convertToChartData(_stepsLastWeekBtwDates!);
 
     caloriesBtwTwoDates = convertToCaloriesChartData(_caloriesBtwDates);
-  
+
     double sumSteps(List<StepData> data) {
       double sum = 0;
 
@@ -72,12 +96,12 @@ class DataProvider extends ChangeNotifier {
 
     totalConsumed = 0;
     totalBurned = 0;
-    for (int i = 7; i >= 1; i--) { 
+    for (int i = 7; i >= 1; i--) {
       final date = today.subtract(Duration(days: i)); // CHANGE 0 to i
-      final dateStr = _fmtDate(date);  
+      final dateStr = _fmtDate(date);
       final dayConsumed = consumed[dateStr] ?? 0.0;
       totalConsumed += dayConsumed;
-      totalBurned += caloriesBtwTwoDates[i-1].value;
+      totalBurned += caloriesBtwTwoDates[i - 1].value;
     }
 
     netDeficit = totalBurned - totalConsumed;
@@ -88,13 +112,12 @@ class DataProvider extends ChangeNotifier {
       weight = userInfo[5];
       height = userInfo[4];
       gender = userInfo[7];
+      bmi = userInfo[8];
       if (gender == 'M') {
-        gender = 'Male';
-      }
-      else if (gender == 'F') {
-        gender = 'Female';
-      }
-      else {
+        gender = 'M';
+      } else if (gender == 'F') {
+        gender = 'F';
+      } else {
         gender = 'Other';
       }
     }
@@ -104,56 +127,63 @@ class DataProvider extends ChangeNotifier {
     double sumThisWeek = sumSteps(stepsBtwTwoDates);
 
     if (sumLastWeek != 0) {
-    stepsWeekChange =
-        ((sumThisWeek - sumLastWeek) / sumLastWeek) * 100;
+      stepsWeekChange = ((sumThisWeek - sumLastWeek) / sumLastWeek) * 100;
     }
 
     increaseStepPerc = stepsWeekChange.toInt();
-    
   }
 
   /* Function to start provider */
   Future<void> start() async {
-
     /* Loading */
     isLoading = true;
-    notifyListeners();   
-    /* String containing the result of authentication (successful or failed) */ 
+    notifyListeners();
+    /* String containing the result of authentication (successful or failed) */
     String result = await _impact.authentication();
 
     /* Authentication succesful then load data */
-    if (result == 'successful'){
+    if (result == 'successful') {
       await _loadData();
       isLoading = false;
       notifyListeners();
     }
-    
+
     /* Periodic timer (each 10 seconds) execute the code inside. It tries to load the data or authenticate if the authentication failed */
-    _timer = Timer.periodic(
-        const Duration(seconds: 10),
-        (_) async {
-          print('refresh');
-          /* Authentication succesfful then load the data otherwise try authentication until it connect to IMPACT */
-          if (result == 'successful') {
-            try {
-              await _loadData();
-              isLoading = false;
-              notifyListeners();
-            }
-            catch(e) {
-              isLoading = true;
-              notifyListeners();
-            }
-          } else {
-            result = await _impact.authentication();
-          }
-        },
-    );    
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      print('refresh');
+      /* Authentication succesfful then load the data otherwise try authentication until it connect to IMPACT */
+      if (result == 'successful') {
+        try {
+          await _loadData();
+          isLoading = false;
+          notifyListeners();
+        } catch (e) {
+          isLoading = true;
+          notifyListeners();
+        }
+      } else {
+        result = await _impact.authentication();
+      }
+    });
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
+  }
+
+  Future<void> changeWeight(String newWeigth) async {
+    final sp = await SharedPreferences.getInstance();
+    String? un = sp.getString("username");
+    List<String>? userData = sp.getStringList(un!);
+    userData![5] = newWeigth;
+    userData[8] =
+        (double.parse(userData[5]) / (pow(double.parse(userData[4]) / 100, 2)))
+            .toString();
+    sp.setStringList(un, userData);
+    weight = newWeigth;
+    bmi = userData[8];
+    notifyListeners();
   }
 }
 
@@ -162,62 +192,66 @@ List<CalorieData> convertToCaloriesChartData(Map<String, dynamic>? data) {
     return [];
   }
 
-  final entries = data.entries.toList()
-    ..sort((a, b) => a.key.compareTo(b.key));
+  final entries = data.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
-  return entries.map((e) {
-    DateTime? date;
+  return entries
+      .map((e) {
+        DateTime? date;
 
-    try {
-      date = DateTime.parse(e.key);
-    } catch (_) {
-      return null; // skip invalid date
-    }
+        try {
+          date = DateTime.parse(e.key);
+        } catch (_) {
+          return null; // skip invalid date
+        }
 
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    final label = days[date.weekday - 1];
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        final label = days[date.weekday - 1];
 
-    final value = (e.value is num)
-        ? (e.value as num).toDouble()
-        : double.tryParse(e.value.toString()) ?? 0.0;
+        final value = (e.value is num)
+            ? (e.value as num).toDouble()
+            : double.tryParse(e.value.toString()) ?? 0.0;
 
-    return CalorieData(label, value);
-  }).whereType<CalorieData>().toList();
+        return CalorieData(label, value);
+      })
+      .whereType<CalorieData>()
+      .toList();
 }
 
-
 //read calories consumed during week from sharedPreferences
-  Map<String, double> _readCaloriesFromPrefs(SharedPreferences prefs, String username) {
-    final result = <String, double>{};
-    final now = DateTime.now();
+Map<String, double> _readCaloriesFromPrefs(
+  SharedPreferences prefs,
+  String username,
+) {
+  final result = <String, double>{};
+  final now = DateTime.now();
 
-    //cycle through days and extract calories from each meal slot in those days
-    for (int i = 6; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final dateStr = _fmtDate(date);
-      double dayTotal = 0.0;
-      for (final slot in MealSlot.values) {
-        final key = 'meals:$username:$dateStr:${slot.name}';
-        final raw = prefs.getString(key);
+  //cycle through days and extract calories from each meal slot in those days
+  for (int i = 6; i >= 0; i--) {
+    final date = now.subtract(Duration(days: i));
+    final dateStr = _fmtDate(date);
+    double dayTotal = 0.0;
+    for (final slot in MealSlot.values) {
+      final key = 'meals:$username:$dateStr:${slot.name}';
+      final raw = prefs.getString(key);
 
-        if (raw != null) {
-          try {
-            final list = jsonDecode(raw) as List<dynamic>;
-            final entries = list
-                .map((e) => MealEntry.fromJson(e as Map<String, dynamic>))
-                .toList();
-            dayTotal += entries
-                .where((e) => e.hasNutritionData)
-                .fold(0.0, (sum, e) => sum + e.scaledCalories);
-          } catch (_) {
-            // skip slot, treat as 0
-          }
+      if (raw != null) {
+        try {
+          final list = jsonDecode(raw) as List<dynamic>;
+          final entries = list
+              .map((e) => MealEntry.fromJson(e as Map<String, dynamic>))
+              .toList();
+          dayTotal += entries
+              .where((e) => e.hasNutritionData)
+              .fold(0.0, (sum, e) => sum + e.scaledCalories);
+        } catch (_) {
+          // skip slot, treat as 0
         }
       }
-      result[dateStr] = dayTotal;
     }
-    return result;
+    result[dateStr] = dayTotal;
   }
-  
-  String _fmtDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  return result;
+}
+
+String _fmtDate(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

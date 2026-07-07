@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:bwthw_project/theme.dart';
 import 'package:bwthw_project/widgets/calories_bar_chart.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import 'package:bwthw_project/screens/meal_page.dart';
@@ -28,11 +29,7 @@ class _DataPageState extends State<DataPage> {
     final provider = context.watch<DataProvider>();
 
     if (provider.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     //if mounted and initialized show the page to the user
@@ -49,6 +46,7 @@ class _DataPageState extends State<DataPage> {
             totalBurned: provider.totalBurned,
             netDeficit: provider.netDeficit,
             weightChange: provider.weightChange,
+            bmi: double.parse(provider.bmi!),
           ),
           CaloriesBarChart(data: provider.caloriesBtwTwoDates),
           Row(
@@ -61,10 +59,10 @@ class _DataPageState extends State<DataPage> {
                   value: '${provider.weight}',
                   color: AppColors.accent,
                 ),
-                ),
-            SizedBox(width: 12),
-            Expanded(
-              child: StatTile(
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
                   icon: Icons.height,
                   label: 'Height',
                   value: '${provider.height}',
@@ -74,13 +72,97 @@ class _DataPageState extends State<DataPage> {
               SizedBox(width: 12),
               Expanded(
                 child: StatTile(
-                    icon: Icons.person,
-                    label: 'Gender',
-                    value: '${provider.gender}',
-                    color: AppColors.fat,
-                  ),
+                  icon: Icons.person,
+                  label: 'Gender',
+                  value: '${provider.gender}',
+                  color: AppColors.fat,
+                ),
               ),
               SizedBox(width: 12),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            children: [
+              SizedBox(width: 12),
+              Expanded(
+                child: StatTile(
+                  icon: Icons.trending_up,
+                  label: 'BMI',
+                  value: '${provider.bmi}',
+                  color: AppColors.fat,
+                ),
+              ),
+              SizedBox(width: 12),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: .center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  TextEditingController tc = TextEditingController();
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Change weight'),
+                        content: SizedBox(
+                          height: 150,
+                          width: 300,
+                          child: Column(
+                            mainAxisAlignment: .start,
+                            children: [
+                              SizedBox(height: 30),
+                              Text('Please input the new weight:'),
+                              SizedBox(height: 8),
+                              TextField(
+                                controller: tc,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: 'Weight',
+                                  hintText: 'Enter your weight (Kg)',
+                                  prefixIcon: Icon(Icons.monitor_weight),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              if (tc.text.isNotEmpty) {
+                                await provider.changeWeight(tc.text);
+                                if (context.mounted) Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Fill the form before entering or cancel",
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text('OK'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text("Cancel"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Text("Report weight change"),
+              ),
             ],
           ),
         ],
@@ -100,12 +182,13 @@ class _DataPageState extends State<DataPage> {
             ),
             //transfer context to meal page
             IconButton(
-              onPressed: () async {Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MealPage(username: widget.username),
-                ),
-              );
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MealPage(username: widget.username),
+                  ),
+                );
               },
               icon: const Icon(Icons.menu_book),
             ),
@@ -123,6 +206,7 @@ class _WeightPredictionCard extends StatelessWidget {
     required this.totalBurned,
     required this.netDeficit,
     required this.weightChange,
+    required this.bmi,
   });
 
   final double totalConsumed;
@@ -130,14 +214,19 @@ class _WeightPredictionCard extends StatelessWidget {
   final double netDeficit;
   final double weightChange;
 
+  final double bmi;
+
   @override
   Widget build(BuildContext context) {
     final noChange = weightChange.abs() < 0.005; // rounds to 0.00 kg
 
     //depending upon change trend display positive or negative trend indicator
     final isLoss = weightChange >= 0;
-    final color =
-        noChange ? AppColors.muted : (isLoss ? AppColors.accent : AppColors.danger);
+    final color = noChange
+        ? AppColors.muted
+        : (bmi < 20
+              ? (isLoss ? AppColors.danger : AppColors.accent)
+              : (isLoss ? AppColors.accent : AppColors.danger));
     final icon = noChange
         ? Icons.trending_flat
         : (isLoss ? Icons.trending_down : Icons.trending_up);
@@ -179,7 +268,7 @@ class _WeightPredictionCard extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 36),
               const SizedBox(width: 10),
-            
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -221,8 +310,7 @@ class _DeficitRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fraction =
-        burned > 0 ? (consumed / burned).clamp(0.0, 1.0) : 0.0;
+    final fraction = burned > 0 ? (consumed / burned).clamp(0.0, 1.0) : 0.0;
 
     return SizedBox(
       width: 190,
