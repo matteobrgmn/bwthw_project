@@ -57,10 +57,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final impact = Impact();
   late DataProvider _dataProvider;
   late IconData _randomIcon;
 
+  /* List of icons */
   final List<IconData> _icons = [
     Icons.face,
     Icons.tag_faces,
@@ -77,6 +77,8 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.needSignUp(context);
     });
+    
+    // Start provider
     Future.microtask(() {
       context.read<DataProvider>().start();
     });
@@ -172,6 +174,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           SizedBox(height: 20),
+
           //yesterday's steps and burned calories side by side
           Row(
             children: [
@@ -195,13 +198,17 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           SizedBox(height: 12),
+
           /* Steps goal bar */
           StepsGoalBar(
             currentSteps: provider.stepsDay,
             goalSteps: 10000,
           ),
           SizedBox(height: 12),
+
+          /* Steps bar chart */
           StepsBarChart(data: provider.stepsBtwTwoDates),
+          
           SizedBox(height: 12),
           // Step perc from last week
           Padding(
@@ -245,9 +252,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 SizedBox(width: 10),
-                Text(
+                Expanded( 
+                  child: Text(
                   "steps from last week",
                   style: TextStyle(fontSize: 20, color: AppColors.muted),
+                ),
                 ),
               ],
             ),

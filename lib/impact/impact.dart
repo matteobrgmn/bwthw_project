@@ -104,10 +104,14 @@ class Impact{
     );
     if (response.statusCode == 200) {
       final responseDecodedBody = jsonDecode(response.body);
+    
+      if (responseDecodedBody['data'].isEmpty) {
+        return 0;
+      }
       for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
-        if (responseDecodedBody['data']['data'][i]['value'] != null) {
-          numberOfSteps = numberOfSteps + int.parse(responseDecodedBody['data']['data'][i]['value']);
-        }
+          if (responseDecodedBody['data']['data'][i]['value'] != null) {
+            numberOfSteps = numberOfSteps + int.parse(responseDecodedBody['data']['data'][i]['value']);
+          }
       }
       // print(numberOfSteps); // Debug
       return numberOfSteps;
@@ -142,6 +146,11 @@ class Impact{
     );
     if (response.statusCode == 200) {
       final responseDecodedBody = jsonDecode(response.body);
+
+      if (responseDecodedBody['data'].isEmpty) {
+        return 0;
+      }
+
       for (var i=0; i<responseDecodedBody['data']['data'].length; i++) {
         if (responseDecodedBody['data']['data'][i]['value'] != null) {
           numberOfCalories = numberOfCalories + double.parse(responseDecodedBody['data']['data'][i]['value']);
@@ -302,7 +311,7 @@ List<StepData> convertToChartData(Map<String, dynamic> data) {
   return entries.map((e) {
     final date = DateTime.parse(e.key);
 
-    const days = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     final label = days[date.weekday - 1];
 

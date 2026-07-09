@@ -154,7 +154,6 @@ class DataProvider extends ChangeNotifier {
 
     /* Periodic timer (each 10 seconds) execute the code inside. It tries to load the data or authenticate if the authentication failed */
     _timer = Timer.periodic(const Duration(seconds: 10), (_) async {
-      print('refresh');
       /* Authentication succesfful then load the data otherwise try authentication until it connect to IMPACT */
       if (result == 'successful') {
         try {
