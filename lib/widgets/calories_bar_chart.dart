@@ -52,8 +52,8 @@ class CaloriesBarChart extends StatelessWidget {
           Expanded(
             child: BarChart(
               BarChartData(
-                maxY: maxValue > 0 ? maxValue + 500 : 2500,
-                gridData: FlGridData(
+                  maxY: ((maxValue / 1000).ceil() + 1) * 1000,
+                  gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) => const FlLine(
@@ -106,6 +106,17 @@ class CaloriesBarChart extends StatelessWidget {
                         );
                       },
                     ),
+                  ),
+                ),
+                // To round the data
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        rod.toY.toInt().toString(),
+                        const TextStyle(),
+                      );
+                    },
                   ),
                 ),
                 barGroups: List.generate(data.length, (i) {

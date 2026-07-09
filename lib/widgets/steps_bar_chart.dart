@@ -31,13 +31,10 @@ class StepsBarChart extends StatelessWidget {
 
     final base = maxValue / 5;
 
-    // scegli ordine di grandezza "umano"
     final magnitude = 1000.0;
 
-    // arrotonda base a step pulito
     final normalizedBase = (base / magnitude).ceil() * magnitude;
 
-    // evita interval = 0 o troppo piccolo
     return normalizedBase < magnitude ? magnitude : normalizedBase;
   }
 
@@ -67,7 +64,7 @@ class StepsBarChart extends StatelessWidget {
           Expanded(
             child: BarChart(
               BarChartData(
-                maxY: maxValue + 1000,
+                maxY: ((maxValue / 1000).ceil() + 1) * 1000,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -78,7 +75,18 @@ class StepsBarChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-
+                // To round the data
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        rod.toY.toInt().toString(),
+                        const TextStyle(),
+                      );
+                    },
+                  ),
+                ),
+    
                 titlesData: FlTitlesData(
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -123,8 +131,8 @@ class StepsBarChart extends StatelessWidget {
                 ),
 
                 barGroups: List.generate(data.length, (i) {
-                  final value = data[i].value;
-
+                  final value = data[i].value.round();
+                  
                   final isMax = value ==
                       data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
 
