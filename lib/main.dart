@@ -34,6 +34,11 @@ class _MainAppState extends State<MainApp> {
     loadStartPage();
   }
 
+  /* Function executed in the first application start to verify if: 
+   *    - the user selected rememberLogin
+   *    - the correct user data
+   *  and select the correct page
+   */
   void loadStartPage() async {
     final sp = await SharedPreferences.getInstance();
 
@@ -51,19 +56,24 @@ class _MainAppState extends State<MainApp> {
       bool userBiom = await verifyUserBiometricsSaved(username);
       if(userBiom)
       {
+        // Verification ok, go to the home page
         startPage = HomePage(title: 'Title', username: username);
       }
       else{
+        // Go to the signin page to fill the data
         startPage = SignInPage(title: 'Title', username: username);
       }
     } else {
+      // Remember me false go to the login page
       startPage = LoginPage(title: 'Title');
     }
+    // Rebuild widget
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // Loading fail
     if (startPage == null) {
       return MaterialApp(
         theme: buildAppTheme(),
@@ -72,6 +82,7 @@ class _MainAppState extends State<MainApp> {
         ),
       );
     }
+    // Loading success go to the page
     return MaterialApp(
       theme: buildAppTheme(),
       home: startPage!,

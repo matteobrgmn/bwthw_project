@@ -88,7 +88,7 @@ void rememberData(bool remember, String username) async {
 }
 
 /* Function to get remember login data (for debug) 
-void getRememberData () async {
+  void getRememberData () async {
   final sp = await SharedPreferences.getInstance();
   bool? rememberValue = sp.getBool('rememberLogin');
   //print('Remember value is $rememberValue'); // Debug
