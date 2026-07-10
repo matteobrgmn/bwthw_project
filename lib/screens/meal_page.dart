@@ -65,6 +65,7 @@ class _MealPageState extends State<MealPage> {
     super.dispose();
   }
 
+  //in case a database food has been selected, update the information about it and display
   Future<void> _onHitSelected(String entryId, FoodSearchHit hit) async {
     _store.updateEntry(entryId, (e) {
       e.foodName = hit.description;
@@ -139,7 +140,7 @@ class _MealPageState extends State<MealPage> {
       );
     }
 
-    //if it's not initialized, wait for it to be
+    //if it's not initialized, wait for it to be and show loading
     if (!_initialized) {
       return Scaffold(
         appBar: appBar,
@@ -173,7 +174,7 @@ class _MealPageState extends State<MealPage> {
     );
   }
 
-  //function to rebuild the function's body, returning a consumer for state updatability
+  //function to build/rebuild the function's body, returning a consumer for state updatability
   Widget _buildBody() {
     return Consumer<MealStore>(
       builder: (context, store, _) {
@@ -193,7 +194,7 @@ class _MealPageState extends State<MealPage> {
             ),
           );
         }
-
+        //let the page be scrollable for when it's populated by multiple widgets
         return SingleChildScrollView(
           child: Column(
             children: [
@@ -287,6 +288,7 @@ class _MealEntryRow extends StatelessWidget {
     required this.onError,
   });
 
+  //food data
   final MealEntry entry;
   final int index;
   final MealStore store;

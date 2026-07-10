@@ -28,6 +28,7 @@ class _DataPageState extends State<DataPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<DataProvider>();
 
+    //if page isn't ready, display loading
     if (provider.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -38,6 +39,7 @@ class _DataPageState extends State<DataPage> {
         title: const Text('Weekly Data'),
         automaticallyImplyLeading: false,
       ),
+      //widget organization in a multiple row structure
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -220,16 +222,16 @@ class _WeightPredictionCard extends StatelessWidget {
     required this.bmi,
   });
 
+  //fields used for weight calculation
   final double totalConsumed;
   final double totalBurned;
   final double netDeficit;
   final double weightChange;
-
   final double bmi;
 
   @override
   Widget build(BuildContext context) {
-    final noChange = weightChange.abs() < 0.005; // rounds to 0.00 kg
+    final noChange = weightChange.abs() < 0.005; // rounds to 0.00 kg if change too low
 
     //depending upon change trend display positive or negative trend indicator
     final isLoss = weightChange >= 0;
@@ -348,6 +350,7 @@ class _DeficitRing extends StatelessWidget {
   }
 }
 
+//produces the circular gauge for calorie info
 class _RingPainter extends CustomPainter {
   const _RingPainter({required this.fraction, required this.color});
 
@@ -362,6 +365,7 @@ class _RingPainter extends CustomPainter {
     final rect = Offset.zero & size;
     final arcRect = rect.deflate(stroke / 2);
 
+    //builds the skeleton of the gauge
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
@@ -369,6 +373,7 @@ class _RingPainter extends CustomPainter {
       ..color = AppColors.outline;
     canvas.drawArc(arcRect, startAngle, maxSweep, false, track);
 
+    //if the indicator needs to be filled, fill it by a percentage
     if (fraction > 0) {
       final fill = Paint()
         ..style = PaintingStyle.stroke

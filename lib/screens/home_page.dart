@@ -4,7 +4,6 @@ import 'package:bwthw_project/screens/meal_page.dart';
 import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '/impact/impact.dart';
 import '../widgets/steps_bar_chart.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
@@ -37,6 +36,7 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 
+  //checks wether login/signup has been done and sends the user to proper page
   void needSignUp(BuildContext context) async {
     final sp = await SharedPreferences.getInstance();
     final user = sp.getStringList(username);
@@ -148,6 +148,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      //shows the "welcome back" message with the emoji
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
