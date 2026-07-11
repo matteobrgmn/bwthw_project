@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../widgets/steps_bar_chart.dart';
 
-// import 'package:intl/intl.dart';
-
 /* This class manages the communication with impact database */
 class Impact{
   static final _baseUrl = "https://impact.dei.unipd.it/bwthw/";
@@ -24,10 +22,12 @@ class Impact{
   static String _token = 'empty';
   static String _refresh = 'empty';
 
-  /* Server status */
+  /* Server status (ping impact) */
   Future<String> serverStatus () async {
     try {
+      // Get call
       final responsePing = await http.get(_formattedPingUrl);
+      // Response sucessful
       if (responsePing.statusCode == 200) {
       return 'online';
     } else {
@@ -35,12 +35,13 @@ class Impact{
     }} catch (e) {
     // print('Network error: $e'); // Debug
     return 'offline';
-  }
+    }
   }
 
   /* Authentication */
   Future<String> authentication () async {
     try {
+      // Post call
       final responseAuthenticate = await http.post(
         _formattedTokenUrl,
         headers: {
@@ -50,8 +51,10 @@ class Impact{
           'username': _username,
           'password': _password,
         }),
-    );
+      );
+      // Response successful
       if (responseAuthenticate.statusCode == 200) {
+        // Decode the json responde
         final data = jsonDecode(responseAuthenticate.body);
         _token = data['access'];
         _refresh = data['refresh'];
@@ -61,10 +64,11 @@ class Impact{
   } catch (e) {
     return 'failed';
   }
-}
+  }
 
   /* Refresh */
   Future<String> refresh () async {
+    // Post call
     final responseRefresh = await http.post(_formattedRefreshUrl, 
         headers: {
                     'Content-Type': 'application/json',
@@ -72,10 +76,10 @@ class Impact{
        body: jsonEncode({ 
                           'refresh' : _refresh
                       }));
+    // Response succesful
     if (responseRefresh.statusCode == 200) {
       final responseRefreshBody = jsonDecode(responseRefresh.body);
       _token = responseRefreshBody['access'];
-      // print('successfull'); // Debug
       return 'successfull';
     } else {
       // print('failed'); // Debug
@@ -85,23 +89,29 @@ class Impact{
 
   /* Return steps for a single day given by argument if the operation is successful, otherwise return -1 if the statusCode <> 200 */
   Future<int> getStepsSingleDay(String day) async {
+    // Verify if token is empty
     if (_token == 'empty') {
       return -1;
     } 
     else {
     
     var numberOfSteps = 0;
+
+    // Verify if token is expired
     if (JwtDecoder.isExpired(_token)){
       await refresh();
       // print('expired'); // Debug
-    };
-    
+    }
+
+    // Get call
     final response = await http.get(
       Uri.parse(_baseUrl + _stepsSingleDayUrl + day),
       headers: {
         'Authorization': 'Bearer $_token',
       },
     );
+
+    // Response succesful
     if (response.statusCode == 200) {
       final responseDecodedBody = jsonDecode(response.body);
     
@@ -128,22 +138,27 @@ class Impact{
   Future<int> getCaloriesSingleDay(String day) async {
     double numberOfCalories = 0;
 
+    // Verify if token is empty
     if (_token == 'empty') {
       return -1;
     } 
     else {
     
+    // Verify if token is expired
     if (JwtDecoder.isExpired(_token)){
       await refresh();
       // print('expired'); // Debug
     }
     
+    // Get call
     final response = await http.get(
       Uri.parse(_baseUrl + _caloriesSingleDayUrl + day),
       headers: {
         'Authorization': 'Bearer $_token',
       },
     );
+
+    // Response succesful
     if (response.statusCode == 200) {
       final responseDecodedBody = jsonDecode(response.body);
 
@@ -184,16 +199,20 @@ class Impact{
       return null; //checks wether or not the startDate is larger than the endDate or the difference is larger than a week, in case it is, return null to be treated as an exception in main page
     }
     */
+
+    // Verify if token is empty
     if (_token == 'empty') {
       return {};
     } 
     else {
+       // Verify if token is expired
       if (JwtDecoder.isExpired(_token)){
         await refresh();
         // print('expired'); // Debug
       };
       
       final urlParsed = Uri.parse("$_baseUrl${_stepsBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+      // Get call
       final response = await http.get(
         urlParsed,
         headers: {
@@ -203,6 +222,8 @@ class Impact{
 
       // print(response.statusCode);
       // print(response.body);
+
+      // Response succesfull
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
         List<dynamic> items = responseDecodedBody['data'];
@@ -238,16 +259,21 @@ class Impact{
    * - stardDate must be lower than endDate
    */
   Future<Map<String, dynamic>?> getCaloriesBtwTwoDates(String startDate, String endDate) async {
+
+    // Verify if token is empty
     if (_token == 'empty') {
       return {};
     } 
     else {
-    if (JwtDecoder.isExpired(_token)){
-      await refresh();
-      // print('expired'); // Debug
-    };
-    
+      // Verify if token is expired
+      if (JwtDecoder.isExpired(_token)){
+        await refresh();
+        // print('expired'); // Debug
+      }
+  
     final urlParsed = Uri.parse("$_baseUrl${_caloriesBtwTwoDates}daterange/start_date/$startDate/end_date/$endDate");
+    
+    // Get call
     final response = await http.get(
       urlParsed,
       headers: {
@@ -255,8 +281,10 @@ class Impact{
       },
     );
 
-     //print(response.statusCode);
-     // print(response.body);
+    //print(response.statusCode);
+    // print(response.body);
+    
+    // Response succesful
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseDecodedBody = jsonDecode(response.body);
       List<dynamic> items = responseDecodedBody['data'];
@@ -291,9 +319,11 @@ class Impact{
   }
 }
 
-/* Function to connect to the server and get steps between two dates */
+/* (NOT USED) Function to connect to the server and get steps between two dates */
 Future<List<StepData>> impactConnection(Impact impact) async {
+  // Authentication
   await impact.authentication();
+  // Get steps between two dates
   final mapOfDates = await impact.getStepsBtwTwoDates(
     '2026-06-04',
     '2026-06-11',
