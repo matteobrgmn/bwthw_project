@@ -29,7 +29,7 @@ class StatTile extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 10),
-          Text(value, style: displayNumber(size: 34)),
+          Text(value, style: displayNumber(size: 30)),
           const SizedBox(height: 2),
           Text(label, style: Theme.of(context).textTheme.titleSmall),
         ],

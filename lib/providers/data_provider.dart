@@ -188,6 +188,20 @@ class DataProvider extends ChangeNotifier {
     bmi = userData[8];
     notifyListeners();
   }
+
+  Future<void> changeHeight(String newHeight) async {
+    final sp = await SharedPreferences.getInstance();
+    String? un = sp.getString("username");
+    List<String>? userData = sp.getStringList(un!);
+    userData![4] = newHeight;
+    userData[8] =
+        (double.parse(userData[5]) / (pow(double.parse(userData[4]) / 100, 2)))
+            .toString();
+    sp.setStringList(un, userData);
+    height = newHeight;
+    bmi = userData[8];
+    notifyListeners();
+  }
 }
 
 List<CalorieData> convertToCaloriesChartData(Map<String, dynamic>? data) {

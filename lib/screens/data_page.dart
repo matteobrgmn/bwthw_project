@@ -173,7 +173,71 @@ class _DataPageState extends State<DataPage> {
                     },
                   );
                 },
-                child: Text("Report weight change"),
+                child: Text("Weight change"),
+              ),
+              SizedBox(width: 18),
+              ElevatedButton(
+                onPressed: () {
+                  TextEditingController tc = TextEditingController();
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Change heigth'),
+                        content: SizedBox(
+                          height: 150,
+                          width: 300,
+                          child: Column(
+                            mainAxisAlignment: .start,
+                            children: [
+                              SizedBox(height: 30),
+                              Text('Please input the new heigth:'),
+                              SizedBox(height: 8),
+                              TextField(
+                                controller: tc,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: 'Height',
+                                  hintText: 'Enter your height (cm)',
+                                  prefixIcon: Icon(Icons.monitor_weight),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              if (tc.text.isNotEmpty) {
+                                await provider.changeHeight(tc.text);
+                                if (context.mounted) Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Fill the form before entering or cancel",
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text('OK'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text("Cancel"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Text("Height change"),
               ),
               SizedBox(width: 12),
             ],
