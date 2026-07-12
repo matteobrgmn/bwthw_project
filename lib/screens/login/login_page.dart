@@ -1,14 +1,9 @@
 import 'package:bwthw_project/screens/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import '../../theme.dart';
-import '../debug_page.dart';
+import '../debug_page.dart'; // Used for debug
 import '../home_page.dart';
 import 'login_utils.dart';
-
-
-//void main() {
-//  runApp(const MyApp()); SEGMENTO UTILE PER TESTARE LA PAGINA DA SOLA
-//}
 
 List<bool> _selectedOption = [true, false];
 
@@ -229,9 +224,12 @@ class _LoginPageState extends State<LoginPage> {
 
               }, child: _selectedOption[0]?Text("Log in"):Text("Sign in")),    
               
+              // Debus page
+              /*
               TextButton(onPressed: () async {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => DebugPage()));
               }, child: Text("Go to debug page")),
+              */
            ],
           ),
          ),
